@@ -1,0 +1,47 @@
+{
+  "songs": {
+    "IBA OH  NATHANIEL BASSEY  DUNSIN OYEKAN  PROPHETIC INSTRUMENTAL CHANTS  .mp3": {
+      "play_count": 1,
+      "skip_count": 0,
+      "total_listening_time": 0,
+      "completion_count": 0,
+      "last_played": "2026-01-08T12:15:07.383548",
+      "average_completion": 0,
+      "rating": 0
+    },
+    "Un compositeur de l'Eternel - Les noms de Dieu.mp3": {
+      "play_count": 1,
+      "skip_count": 0,
+      "total_listening_time": 0,
+      "completion_count": 0,
+      "last_played": "2026-01-08T12:15:56.876880",
+      "average_completion": 0,
+      "rating": 0
+    }
+  },
+  "listening_patterns": {
+    "total_playtime": 0,
+    "total_sessions": 1,
+    "avg_session_duration": 0,
+    "preferred_time_of_day": [],
+    "skip_rate": 0,
+    "completion_rate": 0.0
+  },
+  "preferences": {
+    "favorite_songs": [],
+    "disliked_songs": [],
+    "most_played": [
+      {
+        "song_id": "IBA OH  NATHANIEL BASSEY  DUNSIN OYEKAN  PROPHETIC INSTRUMENTAL CHANTS  .mp3",
+        "play_count": 1
+      }
+    ],
+    "recently_skipped": []
+  },
+  "adaptive_settings": {
+    "ui_complexity": "standard",
+    "recommendation_aggressiveness": "medium",
+    "auto_skip_enabled": false,
+    "smart_shuffle_enabled": false
+  }
+}

@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lecteur Musical</title>
-    <!-- ORDRE IMPORTANT : style.css DOIT être en premier -->
     <link rel="stylesheet" href="/static/style.css">
     <link rel="stylesheet" href="/static/themes.css">
     <link rel="stylesheet" href="/static/theme-selector.css">
     <link rel="stylesheet" href="/static/playlist-menu.css">
     <link rel="stylesheet" href="/static/widget.css">
+    <link rel="stylesheet" href="/static/analytics.css">
 </head>
 <body class="theme-neutral">
     <div class="player-container">
@@ -71,15 +71,14 @@
 
             <div class="progress-indicator" id="progress">0 / 0</div>
         </div>
-        
-        <!-- Le visualiseur audio sera injecté ici par JavaScript -->
     </div>
 
     <div class="notification" id="notification"></div>
 
-    <!-- ORDRE IMPORTANT : thème → script principal → widgets -->
+    <!-- Scripts : thème → script principal → widgets → analytics -->
     <script src="/static/theme-engine.js"></script>
     <script src="/static/script.js"></script>
     <script src="/static/widgets.js"></script>
+    <script src="/static/analytics.js"></script>
 </body>
 </html>

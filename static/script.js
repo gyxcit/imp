@@ -16,24 +16,37 @@ audioElement.volume = 1.0;
 audioElement.addEventListener('ended', async () => {
     console.log('Chanson terminée');
     
+    // Tracker la fin de lecture complète
+    if (window.trackSongEnd) {
+        window.trackSongEnd(true);
+    }
+    
     // Vérifier le mode repeat
     try {
         const response = await fetch('/api/get-modes');
         const data = await response.json();
         
         if (data.repeat) {
-            // Rejouer la même chanson
             console.log('Mode repeat actif, relecture');
             audioElement.currentTime = 0;
             await audioElement.play();
         } else {
-            // Passer à la suivante
             console.log('Passage à la suivante');
             await nextSong();
         }
     } catch (error) {
         console.error('Erreur:', error);
         await nextSong();
+    }
+});
+
+// Chargement des métadonnées
+audioElement.addEventListener('loadedmetadata', () => {
+    document.getElementById('totalTime').textContent = formatTime(audioElement.duration);
+    
+    // Tracker le début de lecture
+    if (window.trackSongStart && currentSong) {
+        window.trackSongStart(currentSong, audioElement.duration);
     }
 });
 
@@ -46,11 +59,6 @@ audioElement.addEventListener('timeupdate', () => {
         document.getElementById('currentTime').textContent = formatTime(audioElement.currentTime);
         document.getElementById('totalTime').textContent = formatTime(audioElement.duration);
     }
-});
-
-// Chargement des métadonnées
-audioElement.addEventListener('loadedmetadata', () => {
-    document.getElementById('totalTime').textContent = formatTime(audioElement.duration);
 });
 
 // Gestion des erreurs audio
@@ -141,7 +149,6 @@ async function updateDisplay() {
                     console.log('Lecture démarrée');
                 } catch (error) {
                     console.error('Erreur de lecture:', error);
-                    // Réessayer après un court délai
                     setTimeout(async () => {
                         try {
                             await audioElement.play();
@@ -152,7 +159,6 @@ async function updateDisplay() {
                 }
             }
         } else if (isPlaying !== wasPlaying) {
-            // L'état de lecture a changé sans changement de chanson
             if (isPlaying) {
                 try {
                     await audioElement.play();
@@ -164,11 +170,6 @@ async function updateDisplay() {
                 audioElement.pause();
                 console.log('Lecture mise en pause');
             }
-        }
-        
-        // Mettre à jour les widgets
-        if (window.updateWidgets) {
-            window.updateWidgets(data.song.title, data.is_playing, data.total);
         }
         
         updatePlayPauseIcon();
@@ -302,6 +303,16 @@ async function togglePlayPause() {
 }
 
 async function nextSong() {
+    // Tracker le skip si la chanson n'était pas terminée
+    if (currentSong && audioElement.currentTime < audioElement.duration - 5) {
+        if (window.trackSkip) {
+            window.trackSkip(currentSong);
+        }
+        if (window.trackSongEnd) {
+            window.trackSongEnd(false);
+        }
+    }
+    
     try {
         const response = await fetch('/api/next', {
             method: 'POST'
@@ -324,7 +335,6 @@ async function nextSong() {
             audioElement.src = `/music/${currentSong}`;
             document.getElementById('progressSlider').value = 0;
             
-            // Maintenir l'état de lecture du serveur
             isPlaying = data.is_playing;
             
             if (isPlaying) {
@@ -339,7 +349,6 @@ async function nextSong() {
             
             await updateDisplay();
             
-            // Mettre à jour la playlist si ouverte
             if (playlistOpen) {
                 updatePlaylistMenu();
             }
@@ -641,6 +650,28 @@ async function initialLoad() {
 // Initialiser le bouton de playlist
 document.addEventListener('DOMContentLoaded', () => {
     createPlaylistButton();
+    
+    // Créer le bouton d'insights - MODIFIÉ
+    const insightsBtn = document.createElement('button');
+    insightsBtn.className = 'file-btn';
+    insightsBtn.id = 'insightsBtn';
+    insightsBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" width="16" height="16">
+            <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+        </svg>
+        Insights
+    `;
+    insightsBtn.addEventListener('click', () => {
+        // MODIFIÉ : Utiliser toggleInsights au lieu de showInsights
+        if (window.toggleInsights) {
+            window.toggleInsights();
+        }
+    });
+    
+    document.querySelector('.file-controls').insertBefore(
+        insightsBtn,
+        document.querySelector('.playlist-selector')
+    );
 });
 
 // Lancer le chargement initial

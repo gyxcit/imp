@@ -12,8 +12,6 @@ class WidgetManager {
 
     async init() {
         console.log('Initialisation des widgets...');
-        this.createAudioVisualizer();
-        this.createNowPlayingIndicator();
         this.createInfoPanel();
         this.createQuickControls();
         this.initRippleEffect();
@@ -33,63 +31,6 @@ class WidgetManager {
         } catch (error) {
             console.error('Erreur chargement modes:', error);
         }
-    }
-
-    createAudioVisualizer() {
-        const visualizer = document.createElement('div');
-        visualizer.className = 'audio-visualizer';
-        visualizer.id = 'audioVisualizer';
-        
-        // Créer 30 barres
-        for (let i = 0; i < 30; i++) {
-            const bar = document.createElement('div');
-            bar.className = 'visualizer-bar';
-            const height = Math.random() * 50 + 10;
-            bar.style.height = `${height}px`;
-            bar.style.animationDelay = `${Math.random() * 0.5}s`;
-            visualizer.appendChild(bar);
-        }
-        
-        document.querySelector('.player-container').appendChild(visualizer);
-        console.log('Visualiseur audio créé');
-        
-        // Animer les barres quand la musique joue
-        this.animateVisualizer();
-    }
-
-    animateVisualizer() {
-        setInterval(() => {
-            if (window.isPlaying) {
-                const bars = document.querySelectorAll('.visualizer-bar');
-                bars.forEach(bar => {
-                    const height = Math.random() * 60 + 10;
-                    bar.style.height = `${height}px`;
-                });
-            }
-        }, 200);
-    }
-
-    createNowPlayingIndicator() {
-        const indicator = document.createElement('div');
-        indicator.className = 'now-playing-indicator';
-        indicator.id = 'nowPlayingIndicator';
-        indicator.innerHTML = `
-            <div class="now-playing-icon">
-                <div class="now-playing-bars">
-                    <div class="now-playing-bar"></div>
-                    <div class="now-playing-bar"></div>
-                    <div class="now-playing-bar"></div>
-                    <div class="now-playing-bar"></div>
-                </div>
-            </div>
-            <div class="now-playing-text">
-                <div class="now-playing-label">En lecture</div>
-                <div class="now-playing-title" id="nowPlayingTitle">-</div>
-            </div>
-        `;
-        
-        document.body.appendChild(indicator);
-        console.log('Indicateur "En lecture" créé');
     }
 
     createInfoPanel() {
@@ -244,23 +185,6 @@ class WidgetManager {
         }
     }
 
-    updateNowPlaying(title, isPlaying) {
-        const indicator = document.getElementById('nowPlayingIndicator');
-        const titleEl = document.getElementById('nowPlayingTitle');
-        
-        if (titleEl) {
-            titleEl.textContent = title || '-';
-        }
-        
-        if (indicator) {
-            if (isPlaying) {
-                indicator.classList.add('show');
-            } else {
-                indicator.classList.remove('show');
-            }
-        }
-    }
-
     updateStats(totalSongs, totalDuration, status) {
         const totalSongsEl = document.getElementById('statTotalSongs');
         const totalDurationEl = document.getElementById('statTotalDuration');
@@ -369,7 +293,6 @@ document.addEventListener('DOMContentLoaded', () => {
 window.updateWidgets = function(songTitle, isPlaying, totalSongs) {
     console.log('Mise à jour widgets:', songTitle, isPlaying, totalSongs);
     if (widgetManager) {
-        widgetManager.updateNowPlaying(songTitle, isPlaying);
         const status = isPlaying ? 'playing' : 'paused';
         widgetManager.updateStats(totalSongs, '0:00', status);
     }
