@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lecteur Musical</title>
     <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/themes.css">
+    <link rel="stylesheet" href="/static/theme-selector.css">
+    <link rel="stylesheet" href="/static/playlist-menu.css">
 </head>
-<body>
+<body class="theme-neutral">
     <div class="player-container">
         <div class="file-controls">
             <button class="file-btn" id="addFilesBtn">
@@ -15,6 +18,7 @@
             <button class="file-btn" id="clearBtn">
                 Effacer tout
             </button>
+            <!-- Le sélecteur de thème sera injecté ici par JavaScript -->
         </div>
 
         <input type="file" id="fileInput" multiple accept="audio/*">
@@ -25,7 +29,6 @@
         </div>
 
         <div class="bottom-section">
-            <!-- Slider de progression -->
             <div class="progress-section">
                 <input type="range" id="progressSlider" min="0" max="100" value="0" step="0.1">
                 <div class="time-display">
@@ -34,7 +37,6 @@
                 </div>
             </div>
 
-            <!-- Contrôles de lecture -->
             <div class="controls">
                 <button class="btn btn-small" id="prevBtn">
                     <svg width="24" height="24" viewBox="0 0 24 24">
@@ -58,7 +60,6 @@
                 </button>
             </div>
 
-            <!-- Slider de volume -->
             <div class="slider-container">
                 <svg class="volume-icon" viewBox="0 0 24 24">
                     <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
@@ -72,6 +73,7 @@
 
     <div class="notification" id="notification"></div>
 
+    <script src="/static/theme-engine.js"></script>
     <script src="/static/script.js"></script>
 </body>
 </html>

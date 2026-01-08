@@ -1,7 +1,10 @@
 from flask import Flask, render_template, jsonify, request, send_from_directory
 import os
 from pathlib import Path
-import hashlib
+from mutagen import File as MutagenFile
+from mutagen.mp3 import MP3
+from mutagen.id3 import ID3
+import traceback
 
 app = Flask(__name__)
 
@@ -18,7 +21,7 @@ app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50 MB max
 playlist = []
 current_index = 0
 is_playing = False
-state_version = 0  # Pour détecter les changements d'état
+state_version = 0
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -26,6 +29,72 @@ def allowed_file(filename):
 def increment_state_version():
     global state_version
     state_version += 1
+
+def extract_metadata(filepath, filename):
+    """Extraire les métadonnées d'un fichier audio"""
+    try:
+        audio = MutagenFile(filepath)
+        
+        if audio is not None:
+            # Essayer d'extraire le titre et l'artiste des tags
+            title = None
+            artist = None
+            
+            if hasattr(audio, 'tags') and audio.tags:
+                # MP3 avec tags ID3
+                if 'TIT2' in audio.tags:
+                    title = str(audio.tags['TIT2'])
+                if 'TPE1' in audio.tags:
+                    artist = str(audio.tags['TPE1'])
+                    
+                # Tags génériques
+                if not title and 'title' in audio.tags:
+                    title = str(audio.tags['title'][0]) if isinstance(audio.tags['title'], list) else str(audio.tags['title'])
+                if not artist and 'artist' in audio.tags:
+                    artist = str(audio.tags['artist'][0]) if isinstance(audio.tags['artist'], list) else str(audio.tags['artist'])
+            
+            if title and artist:
+                return title.strip(), artist.strip()
+    except Exception as e:
+        print(f"Erreur lors de l'extraction des métadonnées de {filename}: {e}")
+    
+    # Fallback : extraire du nom de fichier
+    name_without_ext = os.path.splitext(filename)[0]
+    if ' - ' in name_without_ext:
+        parts = name_without_ext.split(' - ', 1)
+        return parts[1].strip(), parts[0].strip()
+    else:
+        return name_without_ext.strip(), 'Artiste inconnu'
+
+def load_existing_music_files():
+    """Charger tous les fichiers musicaux existants dans le dossier"""
+    global playlist, current_index
+    
+    playlist = []
+    
+    if not os.path.exists(app.config['UPLOAD_FOLDER']):
+        return
+    
+    files = os.listdir(app.config['UPLOAD_FOLDER'])
+    audio_files = [f for f in files if allowed_file(f)]
+    
+    for filename in sorted(audio_files):
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        title, artist = extract_metadata(filepath, filename)
+        
+        song_data = {
+            'title': title,
+            'artist': artist,
+            'filename': filename
+        }
+        playlist.append(song_data)
+    
+    if playlist:
+        current_index = 0
+        print(f"Chargé {len(playlist)} fichier(s) audio")
+    else:
+        current_index = 0
+        print("Aucun fichier audio trouvé")
 
 @app.route('/')
 def index():
@@ -61,12 +130,30 @@ def play_pause():
         'state_version': state_version
     })
 
+@app.route('/api/play-index', methods=['POST'])
+def play_index():
+    global current_index, is_playing
+    data = request.get_json()
+    index = data.get('index', 0)
+    
+    if 0 <= index < len(playlist):
+        current_index = index
+        is_playing = True
+        increment_state_version()
+        return jsonify({
+            'song': playlist[current_index],
+            'index': current_index,
+            'is_playing': is_playing,
+            'state_version': state_version
+        })
+    
+    return jsonify({'error': 'Invalid index'}), 400
+
 @app.route('/api/next', methods=['POST'])
 def next_song():
     global current_index, is_playing
     if playlist:
         current_index = (current_index + 1) % len(playlist)
-        # Maintenir l'état de lecture
         increment_state_version()
         return jsonify({
             'song': playlist[current_index],
@@ -81,7 +168,6 @@ def previous_song():
     global current_index, is_playing
     if playlist:
         current_index = (current_index - 1) % len(playlist)
-        # Maintenir l'état de lecture
         increment_state_version()
         return jsonify({
             'song': playlist[current_index],
@@ -108,23 +194,17 @@ def upload_files():
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
             
-            # Extraire le titre et l'artiste du nom du fichier
-            name_without_ext = os.path.splitext(filename)[0]
-            if ' - ' in name_without_ext:
-                artist, title = name_without_ext.split(' - ', 1)
-            else:
-                title = name_without_ext
-                artist = 'Artiste inconnu'
+            # Extraire les métadonnées
+            title, artist = extract_metadata(filepath, filename)
             
             song_data = {
-                'title': title.strip(),
-                'artist': artist.strip(),
+                'title': title,
+                'artist': artist,
                 'filename': filename
             }
             playlist.append(song_data)
             uploaded.append(song_data)
     
-    # Si la playlist était vide, réinitialiser l'index
     if was_empty and playlist:
         current_index = 0
         is_playing = False
@@ -138,7 +218,11 @@ def upload_files():
 
 @app.route('/api/playlist')
 def get_playlist():
-    return jsonify({'playlist': playlist})
+    return jsonify({
+        'playlist': playlist,
+        'current_index': current_index,
+        'is_playing': is_playing
+    })
 
 @app.route('/api/clear', methods=['POST'])
 def clear_playlist():
@@ -162,9 +246,22 @@ def clear_playlist():
         'state_version': state_version
     })
 
+@app.route('/api/reload-files', methods=['POST'])
+def reload_files():
+    """Recharger les fichiers depuis le dossier music_files"""
+    load_existing_music_files()
+    increment_state_version()
+    return jsonify({
+        'success': True,
+        'total': len(playlist),
+        'state_version': state_version
+    })
+
 @app.route('/music/<filename>')
 def serve_music(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 if __name__ == "__main__":
+    # Charger les fichiers existants au démarrage
+    load_existing_music_files()
     app.run(debug=True, host='0.0.0.0', port=5000)

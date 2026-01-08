@@ -1,0 +1,235 @@
+/* Menu Playlist */
+.playlist-selector {
+    position: relative;
+}
+
+.playlist-toggle-btn {
+    background: var(--bg-primary);
+    border: 2px solid var(--border);
+    padding: 12px 24px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+    outline: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.playlist-toggle-btn:hover {
+    background: var(--bg-secondary);
+    border-color: var(--accent);
+    box-shadow: 0 0 15px var(--shadow);
+}
+
+.playlist-toggle-btn svg {
+    width: 18px;
+    height: 18px;
+    fill: var(--accent);
+}
+
+.playlist-menu {
+    position: absolute;
+    top: 60px;
+    right: 0;
+    background: var(--bg-primary);
+    border: 2px solid var(--border);
+    border-radius: 20px;
+    padding: 15px;
+    min-width: 320px;
+    max-width: 400px;
+    max-height: 500px;
+    box-shadow: 0 15px 50px var(--shadow);
+    z-index: 1000;
+    animation: slideDown 0.3s ease;
+    backdrop-filter: blur(20px);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.playlist-menu-header {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 8px 12px;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.playlist-count {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--border);
+    padding: 4px 12px;
+    border-radius: 12px;
+}
+
+.playlist-items {
+    overflow-y: auto;
+    max-height: 400px;
+    padding-right: 5px;
+}
+
+.playlist-items::-webkit-scrollbar {
+    width: 6px;
+}
+
+.playlist-items::-webkit-scrollbar-track {
+    background: var(--border);
+    border-radius: 3px;
+}
+
+.playlist-items::-webkit-scrollbar-thumb {
+    background: var(--accent);
+    border-radius: 3px;
+}
+
+.playlist-items::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
+
+.playlist-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: transparent;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 6px;
+    width: 100%;
+    text-align: left;
+}
+
+.playlist-item:hover {
+    background: var(--bg-secondary);
+    border-color: var(--border);
+    transform: translateX(5px);
+}
+
+.playlist-item.active {
+    background: var(--bg-secondary);
+    border-color: var(--accent);
+}
+
+.playlist-item-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.playlist-item-icon svg {
+    width: 20px;
+    height: 20px;
+    fill: var(--accent);
+}
+
+.playlist-item.active .playlist-item-icon {
+    background: var(--accent);
+}
+
+.playlist-item.active .playlist-item-icon svg {
+    fill: white;
+}
+
+.playlist-item-info {
+    flex: 1;
+    overflow: hidden;
+}
+
+.playlist-item-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+}
+
+.playlist-item-artist {
+    font-size: 12px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.playlist-item.active .playlist-item-title {
+    color: var(--accent);
+}
+
+.playlist-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+}
+
+.playlist-empty svg {
+    width: 60px;
+    height: 60px;
+    fill: var(--border);
+    margin-bottom: 12px;
+}
+
+.playlist-empty-text {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Animation de lecture sur l'icône */
+@keyframes playingBounce {
+    0%, 100% {
+        transform: scaleY(1);
+    }
+    50% {
+        transform: scaleY(1.2); 
+    }
+}
+
+.playlist-item.active.playing .playlist-item-icon {
+    animation: playingBounce 1s ease-in-out infinite;
+}
+
+.refresh-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.refresh-btn:hover {
+    background: var(--bg-secondary);
+    border-color: var(--accent);
+    transform: rotate(180deg);
+}
+
+.refresh-btn svg {
+    fill: var(--accent);
+}

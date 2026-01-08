@@ -1,0 +1,375 @@
+/* Système de thèmes dynamiques avec fonds colorés */
+:root {
+    /* Variables de base */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --text-primary: #2c3e50;
+    --text-secondary: #7f8c8d;
+    --accent: #34495e;
+    --border: #ecf0f1;
+    --shadow: rgba(0, 0, 0, 0.1);
+    
+    /* Animation */
+    --transition-duration: 2s;
+}
+
+/* Thème Neutre (défaut) */
+body.theme-neutral {
+    --bg-primary: #ffffff;
+    --bg-gradient-start: #e8eaf6;
+    --bg-gradient-end: #f5f5f5;
+    --bg-gradient-middle: #ffffff;
+    --text-primary: #2c3e50;
+    --text-secondary: #7f8c8d;
+    --accent: #5c6bc0;
+    --border: #e0e0e0;
+    --shadow: rgba(92, 107, 192, 0.15);
+}
+
+/* Thème Énergie (rouge-orange dynamique) */
+body.theme-energy {
+    --bg-primary: rgba(255, 255, 255, 0.95);
+    --bg-gradient-start: #ff6b6b;
+    --bg-gradient-end: #ffa502;
+    --bg-gradient-middle: #ff8b3d;
+    --text-primary: #2d0e0e;
+    --text-secondary: #d63031;
+    --accent: #e74c3c;
+    --border: rgba(231, 76, 60, 0.3);
+    --shadow: rgba(255, 107, 107, 0.3);
+}
+
+/* Thème Calme (bleu-violet apaisant) */
+body.theme-calm {
+    --bg-primary: rgba(255, 255, 255, 0.95);
+    --bg-gradient-start: #667eea;
+    --bg-gradient-end: #a8c0ff;
+    --bg-gradient-middle: #8b9ff5;
+    --text-primary: #1a1a3e;
+    --text-secondary: #4a5686;
+    --accent: #667eea;
+    --border: rgba(102, 126, 234, 0.3);
+    --shadow: rgba(102, 126, 234, 0.25);
+}
+
+/* Thème Focus (vert menthe concentré) */
+body.theme-focus {
+    --bg-primary: rgba(255, 255, 255, 0.95);
+    --bg-gradient-start: #56ab2f;
+    --bg-gradient-end: #a8e063;
+    --bg-gradient-middle: #7fce4f;
+    --text-primary: #1a3a1a;
+    --text-secondary: #2d6a2d;
+    --accent: #27ae60;
+    --border: rgba(39, 174, 96, 0.3);
+    --shadow: rgba(86, 171, 47, 0.25);
+}
+
+/* Thème Sunset (orange-rose chaleureux) */
+body.theme-sunset {
+    --bg-primary: rgba(255, 255, 255, 0.95);
+    --bg-gradient-start: #fa709a;
+    --bg-gradient-end: #fee140;
+    --bg-gradient-middle: #fda96d;
+    --text-primary: #4a1a1a;
+    --text-secondary: #b8573e;
+    --accent: #e67e22;
+    --border: rgba(230, 126, 34, 0.3);
+    --shadow: rgba(250, 112, 154, 0.3);
+}
+
+/* Thème Midnight (bleu nuit profond) - CORRIGÉ */
+body.theme-midnight {
+    --bg-primary: rgba(26, 31, 46, 0.85);
+    --bg-secondary: rgba(30, 37, 54, 0.9);
+    --bg-gradient-start: #0f2027;
+    --bg-gradient-end: #2c5364;
+    --bg-gradient-middle: #203a43;
+    --text-primary: #ecf0f1;
+    --text-secondary: #95a5a6;
+    --accent: #3498db;
+    --border: rgba(52, 152, 219, 0.4);
+    --shadow: rgba(52, 152, 219, 0.3);
+}
+
+/* Thème Sunset Dark (sombre chaleureux) - CORRIGÉ */
+body.theme-sunset-dark {
+    --bg-primary: rgba(45, 27, 27, 0.85);
+    --bg-secondary: rgba(61, 36, 36, 0.9);
+    --bg-gradient-start: #3a1c71;
+    --bg-gradient-end: #d76d77;
+    --bg-gradient-middle: #8b4874;
+    --text-primary: #ffdab9;
+    --text-secondary: #ff9966;
+    --accent: #ff6b6b;
+    --border: rgba(255, 107, 107, 0.4);
+    --shadow: rgba(215, 109, 119, 0.3);
+}
+
+/* Nouveau Thème : Aurora (vert-bleu nordique) */
+body.theme-aurora {
+    --bg-primary: rgba(255, 255, 255, 0.95);
+    --bg-gradient-start: #00c6ff;
+    --bg-gradient-end: #0072ff;
+    --bg-gradient-middle: #0099ff;
+    --text-primary: #0a2540;
+    --text-secondary: #2563eb;
+    --accent: #0072ff;
+    --border: rgba(0, 114, 255, 0.3);
+    --shadow: rgba(0, 198, 255, 0.25);
+}
+
+/* Nouveau Thème : Lavender (violet doux) */
+body.theme-lavender {
+    --bg-primary: rgba(255, 255, 255, 0.95);
+    --bg-gradient-start: #c471f5;
+    --bg-gradient-end: #fa71cd;
+    --bg-gradient-middle: #df71e6;
+    --text-primary: #3d1a52;
+    --text-secondary: #8b5cf6;
+    --accent: #a855f7;
+    --border: rgba(168, 85, 247, 0.3);
+    --shadow: rgba(196, 113, 245, 0.25);
+}
+
+/* Nouveau Thème : Ocean (bleu-vert océanique) */
+body.theme-ocean {
+    --bg-primary: rgba(255, 255, 255, 0.95);
+    --bg-gradient-start: #2e3192;
+    --bg-gradient-end: #1bffff;
+    --bg-gradient-middle: #248fc6;
+    --text-primary: #0a2e4a;
+    --text-secondary: #0891b2;
+    --accent: #06b6d4;
+    --border: rgba(6, 182, 212, 0.3);
+    --shadow: rgba(27, 255, 255, 0.25);
+}
+
+/* Nouveau Thème : Fire (rouge-jaune intense) */
+body.theme-fire {
+    --bg-primary: rgba(255, 255, 255, 0.95);
+    --bg-gradient-start: #f12711;
+    --bg-gradient-end: #f5af19;
+    --bg-gradient-middle: #f36b15;
+    --text-primary: #3d0e00;
+    --text-secondary: #dc2626;
+    --accent: #ef4444;
+    --border: rgba(239, 68, 68, 0.3);
+    --shadow: rgba(241, 39, 17, 0.3);
+}
+
+/* Application du gradient avec animation */
+body {
+    background: radial-gradient(circle at 20% 50%, var(--bg-gradient-start) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, var(--bg-gradient-end) 0%, transparent 50%),
+                linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-middle) 50%, var(--bg-gradient-end) 100%);
+    background-size: 100% 100%;
+    background-attachment: fixed;
+    transition: background var(--transition-duration) ease-in-out,
+                color var(--transition-duration) ease-in-out;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Overlay pour effet de profondeur */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), 
+                transparent 0%, var(--bg-gradient-middle) 100%);
+    opacity: 0.15;
+    pointer-events: none;
+    transition: opacity 1s ease;
+    z-index: 0;
+    mix-blend-mode: overlay;
+}
+
+/* Particules d'ambiance */
+.ambient-particles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.5;
+}
+
+.particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: var(--accent);
+    border-radius: 50%;
+    opacity: 0;
+    animation: float 20s infinite ease-in-out;
+    filter: blur(1px);
+    box-shadow: 0 0 10px var(--accent);
+}
+
+@keyframes float {
+    0%, 100% {
+        opacity: 0;
+        transform: translateY(0) translateX(0) scale(0);
+    }
+    50% {
+        opacity: 0.8;
+        transform: translateY(-100vh) translateX(var(--drift)) scale(1.5);
+    }
+}
+
+/* Transitions pour tous les éléments */
+.player-container,
+.song-title,
+.song-artist,
+.btn,
+.file-btn,
+input[type="range"]::-webkit-slider-thumb,
+input[type="range"]::-moz-range-thumb {
+    transition: all var(--transition-duration) ease-in-out;
+}
+
+.player-container {
+    color: var(--text-primary);
+    position: relative;
+    z-index: 1;
+    background: var(--bg-primary);
+    backdrop-filter: blur(10px);
+    border-radius: 30px;
+    box-shadow: 0 20px 60px var(--shadow);
+}
+
+.song-title {
+    color: var(--text-primary);
+    text-shadow: 0 2px 10px var(--shadow);
+}
+
+.song-artist,
+.time-display,
+.progress-indicator {
+    color: var(--text-secondary);
+}
+
+.btn {
+    border-color: var(--border);
+    background: var(--bg-primary);
+    backdrop-filter: blur(10px);
+}
+
+.btn:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 20px var(--shadow);
+    background: var(--bg-secondary);
+}
+
+.btn svg {
+    fill: var(--accent);
+    filter: drop-shadow(0 2px 4px var(--shadow));
+}
+
+.file-btn {
+    border-color: var(--border);
+    color: var(--text-primary);
+    background: var(--bg-primary);
+    backdrop-filter: blur(10px);
+}
+
+.file-btn:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 15px var(--shadow);
+    background: var(--bg-secondary);
+}
+
+input[type="range"] {
+    background: var(--border);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--shadow);
+}
+
+input[type="range"]::-moz-range-thumb {
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--shadow);
+}
+
+.volume-icon {
+    fill: var(--text-secondary);
+}
+
+.notification {
+    background: var(--accent);
+    box-shadow: 0 4px 20px var(--shadow);
+    backdrop-filter: blur(10px);
+}
+
+/* Animation de pulsation pour le bouton lecture en cours */
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 var(--accent);
+    }
+    50% {
+        box-shadow: 0 0 0 15px transparent;
+    }
+}
+
+.btn-large.playing {
+    animation: pulse 2s infinite;
+    border-color: var(--accent);
+    border-width: 3px;
+}
+
+/* Effet de brillance sur les contrôles - OPTIMISÉ pour thèmes sombres */
+.btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.file-btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::after,
+.file-btn::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+/* Ajustement spécifique pour les thèmes sombres */
+body.theme-midnight .btn,
+body.theme-midnight .file-btn,
+body.theme-sunset-dark .btn,
+body.theme-sunset-dark .file-btn {
+    backdrop-filter: blur(5px) brightness(1.1);
+}
+
+body.theme-midnight .btn::after,
+body.theme-midnight .file-btn::after,
+body.theme-sunset-dark .btn::after,
+body.theme-sunset-dark .file-btn::after {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+}
+
+.btn:hover::after,
+.file-btn:hover::after {
+    left: 100%;
+}
+
+/* Correction pour le player-container sur thèmes sombres */
+body.theme-midnight .player-container,
+body.theme-sunset-dark .player-container {
+    backdrop-filter: blur(8px) saturate(150%);
+}
