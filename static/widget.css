@@ -1,0 +1,385 @@
+/* Widgets et composants modulaires */
+
+/* Widget de visualisation audio - CORRIGÉ */
+.audio-visualizer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 3px;
+    padding: 0 20px;
+    opacity: 0.2;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.visualizer-bar {
+    width: 4px;
+    background: linear-gradient(to top, var(--accent), transparent);
+    border-radius: 2px 2px 0 0;
+    transition: height 0.1s ease;
+    animation: pulse-bar 1s ease-in-out infinite;
+}
+
+@keyframes pulse-bar {
+    0%, 100% { height: 10px; }
+    50% { height: 30px; }
+}
+
+.visualizer-bar:nth-child(2n) {
+    animation-delay: 0.1s;
+}
+
+.visualizer-bar:nth-child(3n) {
+    animation-delay: 0.2s;
+}
+
+.visualizer-bar:nth-child(4n) {
+    animation-delay: 0.3s;
+}
+
+/* Panneau d'informations flottant */
+.info-panel {
+    position: fixed;
+    bottom: 30px;
+    left: 30px;
+    background: var(--bg-primary);
+    border: 2px solid var(--border);
+    border-radius: 20px;
+    padding: 20px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 10px 40px var(--shadow);
+    z-index: 1000;
+    min-width: 200px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s ease;
+}
+
+.info-panel.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.info-panel-header {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-bottom: 12px;
+}
+
+.info-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.info-stat:last-child {
+    border-bottom: none;
+}
+
+.info-stat-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.info-stat-value {
+    font-size: 14px;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+/* Indicateur de lecture en cours */
+.now-playing-indicator {
+    position: fixed;
+    top: 30px;
+    left: 30px;
+    background: var(--bg-primary);
+    border: 2px solid var(--border);
+    border-radius: 15px;
+    padding: 12px 18px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 8px 30px var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    opacity: 0;
+    transform: translateX(-100px);
+    transition: all 0.4s ease;
+    z-index: 1000;
+    max-width: 300px;
+}
+
+.now-playing-indicator.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.now-playing-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--accent);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.now-playing-bars {
+    display: flex;
+    gap: 3px;
+    height: 20px;
+    align-items: flex-end;
+}
+
+.now-playing-bar {
+    width: 3px;
+    background: white;
+    border-radius: 2px;
+    animation: bounce-bar 0.6s ease-in-out infinite;
+}
+
+.now-playing-bar:nth-child(1) { animation-delay: 0s; }
+.now-playing-bar:nth-child(2) { animation-delay: 0.1s; }
+.now-playing-bar:nth-child(3) { animation-delay: 0.2s; }
+.now-playing-bar:nth-child(4) { animation-delay: 0.3s; }
+
+@keyframes bounce-bar {
+    0%, 100% { height: 6px; }
+    50% { height: 18px; }
+}
+
+.now-playing-text {
+    flex: 1;
+    overflow: hidden;
+}
+
+.now-playing-label {
+    font-size: 10px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.now-playing-title {
+    font-size: 13px;
+    color: var(--text-primary);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Panneau de contrôle rapide */
+.quick-controls {
+    position: fixed;
+    top: 50%;
+    right: 30px;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 1000;
+}
+
+.quick-control-btn {
+    width: 50px;
+    height: 50px;
+    background: var(--bg-primary);
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 5px 20px var(--shadow);
+    position: relative;
+    overflow: hidden;
+}
+
+.quick-control-btn:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    transform: scale(1.1);
+    box-shadow: 0 8px 30px var(--shadow);
+}
+
+.quick-control-btn:hover svg {
+    fill: white;
+}
+
+.quick-control-btn svg {
+    width: 22px;
+    height: 22px;
+    fill: var(--accent);
+    transition: fill 0.3s ease;
+}
+
+/* État actif des boutons de contrôle rapide */
+.quick-control-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 20px var(--shadow);
+}
+
+.quick-control-btn.active svg {
+    fill: white;
+}
+
+.quick-control-btn.active::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    padding: 2px;
+    background: linear-gradient(45deg, var(--accent), transparent);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    animation: rotate-border 3s linear infinite;
+}
+
+@keyframes rotate-border {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Animation de pulsation pour les boutons actifs */
+.quick-control-btn.active {
+    animation: pulse-active 2s ease-in-out infinite;
+}
+
+@keyframes pulse-active {
+    0%, 100% {
+        box-shadow: 0 0 20px var(--shadow);
+    }
+    50% {
+        box-shadow: 0 0 30px var(--shadow), 0 0 40px var(--accent);
+    }
+}
+
+/* Badge de statut */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--border);
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-badge.playing {
+    background: rgba(39, 174, 96, 0.2);
+    color: #27ae60;
+}
+
+.status-badge.paused {
+    background: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+}
+
+.status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Tooltip personnalisé */
+.custom-tooltip {
+    position: fixed;
+    background: var(--text-primary);
+    color: var(--bg-primary);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    pointer-events: none;
+    z-index: 10000;
+    opacity: 0;
+    transform: translateY(-5px);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.custom-tooltip.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.custom-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: var(--text-primary);
+}
+
+/* Effet de vague lors du clic */
+.ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    pointer-events: none;
+    animation: ripple-effect 0.6s ease-out;
+}
+
+@keyframes ripple-effect {
+    from {
+        transform: scale(0);
+        opacity: 1;
+    }
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .info-panel,
+    .now-playing-indicator {
+        display: none;
+    }
+    
+    .quick-controls {
+        right: 15px;
+        gap: 8px;
+    }
+    
+    .quick-control-btn {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .quick-control-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+}

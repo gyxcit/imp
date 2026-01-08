@@ -23,6 +23,10 @@ current_index = 0
 is_playing = False
 state_version = 0
 
+# Variables globales pour shuffle et repeat
+shuffle_mode = False
+repeat_mode = False
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -153,7 +157,18 @@ def play_index():
 def next_song():
     global current_index, is_playing
     if playlist:
-        current_index = (current_index + 1) % len(playlist)
+        if shuffle_mode:
+            # Mode aléatoire
+            import random
+            new_index = random.randint(0, len(playlist) - 1)
+            # Éviter de rejouer la même chanson
+            if len(playlist) > 1 and new_index == current_index:
+                new_index = (new_index + 1) % len(playlist)
+            current_index = new_index
+        else:
+            # Mode normal
+            current_index = (current_index + 1) % len(playlist)
+        
         increment_state_version()
         return jsonify({
             'song': playlist[current_index],
@@ -260,6 +275,32 @@ def reload_files():
 @app.route('/music/<filename>')
 def serve_music(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+# Routes pour shuffle et repeat
+@app.route('/api/toggle-shuffle', methods=['POST'])
+def toggle_shuffle():
+    global shuffle_mode
+    shuffle_mode = not shuffle_mode
+    return jsonify({
+        'shuffle': shuffle_mode,
+        'state_version': state_version
+    })
+
+@app.route('/api/toggle-repeat', methods=['POST'])
+def toggle_repeat():
+    global repeat_mode
+    repeat_mode = not repeat_mode
+    return jsonify({
+        'repeat': repeat_mode,
+        'state_version': state_version
+    })
+
+@app.route('/api/get-modes')
+def get_modes():
+    return jsonify({
+        'shuffle': shuffle_mode,
+        'repeat': repeat_mode
+    })
 
 if __name__ == "__main__":
     # Charger les fichiers existants au démarrage

@@ -12,10 +12,29 @@ audioElement.preload = 'auto';
 // Initialiser le volume
 audioElement.volume = 1.0;
 
-// Gestion de la fin de la chanson
+// Gestion de la fin de la chanson avec repeat
 audioElement.addEventListener('ended', async () => {
-    console.log('Chanson terminée, passage à la suivante');
-    await nextSong();
+    console.log('Chanson terminée');
+    
+    // Vérifier le mode repeat
+    try {
+        const response = await fetch('/api/get-modes');
+        const data = await response.json();
+        
+        if (data.repeat) {
+            // Rejouer la même chanson
+            console.log('Mode repeat actif, relecture');
+            audioElement.currentTime = 0;
+            await audioElement.play();
+        } else {
+            // Passer à la suivante
+            console.log('Passage à la suivante');
+            await nextSong();
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
+        await nextSong();
+    }
 });
 
 // Mise à jour de la progression
@@ -145,6 +164,11 @@ async function updateDisplay() {
                 audioElement.pause();
                 console.log('Lecture mise en pause');
             }
+        }
+        
+        // Mettre à jour les widgets
+        if (window.updateWidgets) {
+            window.updateWidgets(data.song.title, data.is_playing, data.total);
         }
         
         updatePlayPauseIcon();

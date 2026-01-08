@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lecteur Musical</title>
+    <!-- ORDRE IMPORTANT : style.css DOIT être en premier -->
     <link rel="stylesheet" href="/static/style.css">
     <link rel="stylesheet" href="/static/themes.css">
     <link rel="stylesheet" href="/static/theme-selector.css">
     <link rel="stylesheet" href="/static/playlist-menu.css">
+    <link rel="stylesheet" href="/static/widget.css">
 </head>
 <body class="theme-neutral">
     <div class="player-container">
@@ -18,7 +20,7 @@
             <button class="file-btn" id="clearBtn">
                 Effacer tout
             </button>
-            <!-- Le sélecteur de thème sera injecté ici par JavaScript -->
+            <!-- Le sélecteur de playlist et thème seront injectés ici -->
         </div>
 
         <input type="file" id="fileInput" multiple accept="audio/*">
@@ -69,11 +71,15 @@
 
             <div class="progress-indicator" id="progress">0 / 0</div>
         </div>
+        
+        <!-- Le visualiseur audio sera injecté ici par JavaScript -->
     </div>
 
     <div class="notification" id="notification"></div>
 
+    <!-- ORDRE IMPORTANT : thème → script principal → widgets -->
     <script src="/static/theme-engine.js"></script>
     <script src="/static/script.js"></script>
+    <script src="/static/widgets.js"></script>
 </body>
 </html>
