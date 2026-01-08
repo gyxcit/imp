@@ -88,10 +88,14 @@ class MultimodalCapture {
 
             const audioData = e.inputBuffer.getChannelData(0);
 
-            // Convertir Float32Array en base64
+            // Conversion sécurisée en base64 pour éviter le Stack Overflow
             const buffer = new Float32Array(audioData);
             const bytes = new Uint8Array(buffer.buffer);
-            const base64 = btoa(String.fromCharCode(...bytes));
+            let binary = '';
+            for (let i = 0; i < bytes.byteLength; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            const base64 = btoa(binary);
 
             this.socket.emit('audio_chunk', { audio: base64 });
         };
