@@ -57,8 +57,85 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 30px;
+            gap: 25px;
             padding-bottom: 40px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .progress-section {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .time-display {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #95a5a6;
+            font-weight: 500;
+        }
+
+        .slider-container {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .volume-icon {
+            width: 20px;
+            height: 20px;
+            fill: #7f8c8d;
+            flex-shrink: 0;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #ecf0f1;
+            outline: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #34495e;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #2c3e50;
+            transform: scale(1.2);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #34495e;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+
+        input[type="range"]::-moz-range-thumb:hover {
+            background: #2c3e50;
+            transform: scale(1.2);
+        }
+
+        #volumeSlider {
+            width: 120px;
         }
 
         .controls {
@@ -114,16 +191,87 @@
             font-size: 16px;
             font-weight: 500;
         }
+
+        .file-controls {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .file-btn {
+            background: white;
+            border: 2px solid #ecf0f1;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #34495e;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .file-btn:hover {
+            background: #f8f9fa;
+            border-color: #bdc3c7;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .notification {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2c3e50;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .notification.show {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
     <div class="player-container">
+        <div class="file-controls">
+            <button class="file-btn" onclick="document.getElementById('fileInput').click()">
+                + Ajouter des fichiers
+            </button>
+            <button class="file-btn" onclick="clearPlaylist()">
+                Effacer tout
+            </button>
+        </div>
+
+        <input type="file" id="fileInput" multiple accept="audio/*" onchange="uploadFiles(event)">
+
         <div class="song-info">
-            <div class="song-title" id="songTitle">-</div>
-            <div class="song-artist" id="songArtist">-</div>
+            <div class="song-title" id="songTitle">Aucune musique</div>
+            <div class="song-artist" id="songArtist">Ajoutez des fichiers</div>
         </div>
 
         <div class="bottom-section">
+            <!-- Slider de progression -->
+            <div class="progress-section">
+                <input type="range" id="progressSlider" min="0" max="100" value="0" step="0.1">
+                <div class="time-display">
+                    <span id="currentTime">0:00</span>
+                    <span id="totalTime">0:00</span>
+                </div>
+            </div>
+
+            <!-- Contrôles de lecture -->
             <div class="controls">
                 <button class="btn btn-small" id="prevBtn">
                     <svg width="24" height="24" viewBox="0 0 24 24">
@@ -147,12 +295,76 @@
                 </button>
             </div>
 
-            <div class="progress-indicator" id="progress">1 / 5</div>
+            <!-- Slider de volume -->
+            <div class="slider-container">
+                <svg class="volume-icon" viewBox="0 0 24 24">
+                    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+                </svg>
+                <input type="range" id="volumeSlider" min="0" max="100" value="100">
+            </div>
+
+            <div class="progress-indicator" id="progress">0 / 0</div>
         </div>
     </div>
 
+    <div class="notification" id="notification"></div>
+
     <script>
         let isPlaying = false;
+        let audioElement = new Audio();
+        let currentSong = null;
+        let isSeekingProgress = false;
+
+        // Initialiser le volume
+        audioElement.volume = 1.0;
+
+        // Gestion de la fin de la chanson
+        audioElement.addEventListener('ended', async () => {
+            await nextSong();
+        });
+
+        // Mise à jour de la progression
+        audioElement.addEventListener('timeupdate', () => {
+            if (!isSeekingProgress && audioElement.duration) {
+                const progress = (audioElement.currentTime / audioElement.duration) * 100;
+                document.getElementById('progressSlider').value = progress;
+                
+                document.getElementById('currentTime').textContent = formatTime(audioElement.currentTime);
+                document.getElementById('totalTime').textContent = formatTime(audioElement.duration);
+            }
+        });
+
+        // Chargement des métadonnées
+        audioElement.addEventListener('loadedmetadata', () => {
+            document.getElementById('totalTime').textContent = formatTime(audioElement.duration);
+        });
+
+        // Slider de progression
+        const progressSlider = document.getElementById('progressSlider');
+        progressSlider.addEventListener('input', () => {
+            isSeekingProgress = true;
+            const time = (progressSlider.value / 100) * audioElement.duration;
+            document.getElementById('currentTime').textContent = formatTime(time);
+        });
+
+        progressSlider.addEventListener('change', () => {
+            const time = (progressSlider.value / 100) * audioElement.duration;
+            audioElement.currentTime = time;  // <-- Ceci déplace la lecture
+            isSeekingProgress = false;
+        });
+
+        // Slider de volume
+        const volumeSlider = document.getElementById('volumeSlider');
+        volumeSlider.addEventListener('input', () => {
+            audioElement.volume = volumeSlider.value / 100;
+        });
+
+        function formatTime(seconds) {
+            if (!seconds || isNaN(seconds)) return '0:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
 
         async function updateDisplay() {
             const response = await fetch('/api/current');
@@ -163,6 +375,21 @@
             document.getElementById('progress').textContent = `${data.index + 1} / ${data.total}`;
             
             isPlaying = data.is_playing;
+            
+            // Charger le fichier audio si différent
+            if (data.song.filename && data.song.filename !== currentSong) {
+                currentSong = data.song.filename;
+                audioElement.src = `/music/${currentSong}`;
+                
+                if (isPlaying) {
+                    try {
+                        await audioElement.play();
+                    } catch (error) {
+                        console.error('Erreur de lecture:', error);
+                    }
+                }
+            }
+            
             updatePlayPauseIcon();
         }
 
@@ -179,20 +406,117 @@
             }
         }
 
-        document.getElementById('playPauseBtn').addEventListener('click', async () => {
-            await fetch('/api/play-pause');
-            await updateDisplay();
-        });
+        function showNotification(message) {
+            const notif = document.getElementById('notification');
+            notif.textContent = message;
+            notif.classList.add('show');
+            setTimeout(() => {
+                notif.classList.remove('show');
+            }, 3000);
+        }
 
-        document.getElementById('nextBtn').addEventListener('click', async () => {
-            await fetch('/api/next');
-            await updateDisplay();
-        });
+        async function uploadFiles(event) {
+            const files = event.target.files;
+            if (files.length === 0) return;
 
-        document.getElementById('prevBtn').addEventListener('click', async () => {
-            await fetch('/api/previous');
-            await updateDisplay();
-        });
+            const formData = new FormData();
+            for (let file of files) {
+                formData.append('files', file);
+            }
+
+            try {
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                showNotification(`${data.uploaded.length} fichier(s) ajouté(s)`);
+                await updateDisplay();
+            } catch (error) {
+                showNotification('Erreur lors de l\'ajout des fichiers');
+            }
+
+            event.target.value = '';
+        }
+
+        async function clearPlaylist() {
+            if (confirm('Voulez-vous effacer toute la playlist ?')) {
+                await fetch('/api/clear');
+                audioElement.pause();
+                audioElement.src = '';
+                currentSong = null;
+                document.getElementById('progressSlider').value = 0;
+                document.getElementById('currentTime').textContent = '0:00';
+                document.getElementById('totalTime').textContent = '0:00';
+                await updateDisplay();
+                showNotification('Playlist effacée');
+            }
+        }
+
+        async function togglePlayPause() {
+            const response = await fetch('/api/play-pause');
+            const data = await response.json();
+            isPlaying = data.is_playing;
+            
+            if (isPlaying) {
+                try {
+                    await audioElement.play();
+                } catch (error) {
+                    console.error('Erreur de lecture:', error);
+                }
+            } else {
+                audioElement.pause();
+            }
+            
+            updatePlayPauseIcon();
+        }
+
+        async function nextSong() {
+            const response = await fetch('/api/next');
+            const data = await response.json();
+            
+            if (data.song) {
+                currentSong = data.song.filename;
+                audioElement.src = `/music/${currentSong}`;
+                document.getElementById('progressSlider').value = 0;
+                
+                if (isPlaying) {
+                    try {
+                        await audioElement.play();
+                    } catch (error) {
+                        console.error('Erreur de lecture:', error);
+                    }
+                }
+                
+                await updateDisplay();
+            }
+        }
+
+        async function previousSong() {
+            const response = await fetch('/api/previous');
+            const data = await response.json();
+            
+            if (data.song) {
+                currentSong = data.song.filename;
+                audioElement.src = `/music/${currentSong}`;
+                document.getElementById('progressSlider').value = 0;
+                
+                if (isPlaying) {
+                    try {
+                        await audioElement.play();
+                    } catch (error) {
+                        console.error('Erreur de lecture:', error);
+                    }
+                }
+                
+                await updateDisplay();
+            }
+        }
+
+        document.getElementById('playPauseBtn').addEventListener('click', togglePlayPause);
+        document.getElementById('nextBtn').addEventListener('click', nextSong);
+        document.getElementById('prevBtn').addEventListener('click', previousSong);
 
         // Initialiser l'affichage
         updateDisplay();

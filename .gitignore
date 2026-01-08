@@ -8,3 +8,12 @@ wheels/
 
 # Virtual environments
 .venv
+
+# music files
+*.mp3
+*.wav
+*.flac
+*.aac
+*.ogg
+*.m4a
+
