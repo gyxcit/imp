@@ -11,6 +11,11 @@ import time
 
 # Importer le système d'attention
 from attention_system import AttentionDetector
+from flask_socketio import SocketIO, emit
+from multimodal_system import MultimodalSystem
+import base64
+import numpy as np
+import cv2
 
 app = Flask(__name__)
 
@@ -69,6 +74,10 @@ current_session = {
     'song_start_time': None,
     'total_listening_time': 0
 }
+
+# Initialiser système multimodal
+socketio = SocketIO(app, cors_allowed_origins="*")
+multimodal_system = MultimodalSystem(attention_detector)
 
 def load_analytics():
     """Charger les analytics depuis le fichier"""
@@ -656,7 +665,45 @@ def get_modes():
         'repeat': repeat_mode
     })
 
+@app.route('/api/multimodal/start', methods=['POST'])
+def start_multimodal():
+    """Démarrer capture multimodale"""
+    multimodal_system.start()
+    return jsonify({'success': True})
+
+@app.route('/api/multimodal/stop', methods=['POST'])
+def stop_multimodal():
+    """Arrêter capture"""
+    multimodal_system.stop()
+    return jsonify({'success': True})
+
+@socketio.on('video_frame')
+def handle_video_frame(data):
+    """Réception frame vidéo via WebSocket"""
+    try:
+        # Décoder base64 → numpy array
+        img_data = base64.b64decode(data['frame'].split(',')[1])
+        nparr = np.frombuffer(img_data, np.uint8)
+        frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        
+        multimodal_system.add_video_frame(frame)
+    except Exception as e:
+        print(f"❌ Erreur frame: {e}")
+
+@socketio.on('audio_chunk')
+def handle_audio_chunk(data):
+    """Réception chunk audio via WebSocket"""
+    try:
+        # Décoder base64 → numpy array
+        audio_bytes = base64.b64decode(data['audio'])
+        audio_array = np.frombuffer(audio_bytes, dtype=np.float32)
+        
+        multimodal_system.add_audio_chunk(audio_array)
+    except Exception as e:
+        print(f"❌ Erreur audio: {e}")
+
+# Modifier run final
 if __name__ == "__main__":
     load_analytics()
     load_existing_music_files()
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    socketio.run(app, debug=True, host='0.0.0.0', port=5000)
