@@ -231,6 +231,11 @@ class AttentionAdapter {
             // Mettre à jour le slider visuel de manière synchronisée
             this.updateVolumeSlider(newVolume);
 
+            // Mettre à jour le widget d'infos
+            if (window.widgetManager && typeof window.widgetManager.updateVolume === 'function') {
+                window.widgetManager.updateVolume(newVolume);
+            }
+
             step++;
         }, intervalTime);
     }
@@ -368,6 +373,10 @@ class AttentionAdapter {
         // Mettre à jour via le WidgetManager si disponible
         if (window.widgetManager && typeof window.widgetManager.updateAttentionScore === 'function') {
             window.widgetManager.updateAttentionScore(score);
+            // Mettre à jour aussi le volume affiché
+            if (this.state.adaptations && typeof window.widgetManager.updateVolume === 'function') {
+                window.widgetManager.updateVolume(this.state.adaptations.volume);
+            }
             console.log(`📊 Widget info mis à jour: ${score}/100`);
         }
     }

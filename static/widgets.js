@@ -16,7 +16,7 @@ class WidgetManager {
         this.createQuickControls();
         this.initRippleEffect();
         this.initTooltips();
-        
+
         // Charger l'état initial des modes
         await this.loadModes();
     }
@@ -57,6 +57,10 @@ class WidgetManager {
                 </span>
             </div>
             <div class="info-stat">
+                <span class="info-stat-label">Volume</span>
+                <span class="info-stat-value" id="statVolume">100%</span>
+            </div>
+            <div class="info-stat">
                 <span class="info-stat-label">Attention</span>
                 <span class="info-stat-value">
                     <span class="attention-score" id="statAttentionScore">100</span>
@@ -64,10 +68,10 @@ class WidgetManager {
                 </span>
             </div>
         `;
-        
+
         document.body.appendChild(panel);
         console.log('Panneau d\'infos créé');
-        
+
         // Afficher après 1 seconde
         setTimeout(() => {
             panel.classList.add('show');
@@ -99,23 +103,23 @@ class WidgetManager {
                 </svg>
             </button>
         `;
-        
+
         document.body.appendChild(controls);
         console.log('Contrôles rapides créés');
-        
+
         // Event listeners
         document.getElementById('quickInfo')?.addEventListener('click', () => {
             this.toggleInfoPanel();
         });
-        
+
         document.getElementById('quickShuffle')?.addEventListener('click', () => {
             this.toggleShuffle();
         });
-        
+
         document.getElementById('quickRepeat')?.addEventListener('click', () => {
             this.toggleRepeat();
         });
-        
+
         document.getElementById('quickLike')?.addEventListener('click', () => {
             this.toggleLike();
         });
@@ -129,7 +133,7 @@ class WidgetManager {
             const data = await response.json();
             this.shuffleMode = data.shuffle;
             this.updateButtonStates();
-            
+
             const message = this.shuffleMode ? 'Mode aléatoire activé 🎲' : 'Mode aléatoire désactivé';
             this.showToast(message);
         } catch (error) {
@@ -145,7 +149,7 @@ class WidgetManager {
             const data = await response.json();
             this.repeatMode = data.repeat;
             this.updateButtonStates();
-            
+
             const message = this.repeatMode ? 'Répétition activée 🔁' : 'Répétition désactivée';
             this.showToast(message);
         } catch (error) {
@@ -156,7 +160,7 @@ class WidgetManager {
     toggleLike() {
         const btn = document.getElementById('quickLike');
         btn.classList.toggle('active');
-        
+
         if (btn.classList.contains('active')) {
             this.showToast('Ajouté aux favoris ❤️');
         } else {
@@ -167,7 +171,7 @@ class WidgetManager {
     updateButtonStates() {
         const shuffleBtn = document.getElementById('quickShuffle');
         const repeatBtn = document.getElementById('quickRepeat');
-        
+
         if (shuffleBtn) {
             if (this.shuffleMode) {
                 shuffleBtn.classList.add('active');
@@ -175,7 +179,7 @@ class WidgetManager {
                 shuffleBtn.classList.remove('active');
             }
         }
-        
+
         if (repeatBtn) {
             if (this.repeatMode) {
                 repeatBtn.classList.add('active');
@@ -196,15 +200,15 @@ class WidgetManager {
         const totalSongsEl = document.getElementById('statTotalSongs');
         const totalDurationEl = document.getElementById('statTotalDuration');
         const statusEl = document.getElementById('statStatus');
-        
+
         if (totalSongsEl) {
             totalSongsEl.textContent = totalSongs || 0;
         }
-        
+
         if (totalDurationEl) {
             totalDurationEl.textContent = totalDuration || '0:00';
         }
-        
+
         if (statusEl) {
             if (status === 'playing') {
                 statusEl.className = 'status-badge playing';
@@ -223,7 +227,7 @@ class WidgetManager {
         const scoreEl = document.getElementById('statAttentionScore');
         if (scoreEl) {
             scoreEl.textContent = Math.round(score);
-            
+
             // Colorier selon le score
             scoreEl.className = 'attention-score';
             if (score >= 75) {
@@ -238,26 +242,33 @@ class WidgetManager {
         }
     }
 
+    updateVolume(volume) {
+        const volumeEl = document.getElementById('statVolume');
+        if (volumeEl) {
+            volumeEl.textContent = `${Math.round(volume)}%`;
+        }
+    }
+
     initRippleEffect() {
         document.addEventListener('click', (e) => {
             if (e.target.closest('.btn, .file-btn, .quick-control-btn')) {
                 const button = e.target.closest('.btn, .file-btn, .quick-control-btn');
                 const ripple = document.createElement('span');
                 ripple.className = 'ripple';
-                
+
                 const rect = button.getBoundingClientRect();
                 const size = Math.max(rect.width, rect.height);
                 const x = e.clientX - rect.left - size / 2;
                 const y = e.clientY - rect.top - size / 2;
-                
+
                 ripple.style.width = ripple.style.height = `${size}px`;
                 ripple.style.left = `${x}px`;
                 ripple.style.top = `${y}px`;
-                
+
                 button.style.position = 'relative';
                 button.style.overflow = 'hidden';
                 button.appendChild(ripple);
-                
+
                 setTimeout(() => ripple.remove(), 600);
             }
         });
@@ -268,7 +279,7 @@ class WidgetManager {
         tooltip.className = 'custom-tooltip';
         tooltip.id = 'customTooltip';
         document.body.appendChild(tooltip);
-        
+
         document.addEventListener('mouseover', (e) => {
             const target = e.target.closest('[data-tooltip]');
             if (target) {
@@ -278,13 +289,13 @@ class WidgetManager {
                 this.updateTooltipPosition(e, tooltip);
             }
         });
-        
+
         document.addEventListener('mousemove', (e) => {
             if (tooltip.classList.contains('show')) {
                 this.updateTooltipPosition(e, tooltip);
             }
         });
-        
+
         document.addEventListener('mouseout', (e) => {
             const target = e.target.closest('[data-tooltip]');
             if (target) {
@@ -309,17 +320,17 @@ class WidgetManager {
 }
 
 // Initialiser les widgets au chargement
-let widgetManager;
+// Initialiser les widgets au chargement
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM chargé, création du WidgetManager...');
-    widgetManager = new WidgetManager();
+    window.widgetManager = new WidgetManager();
 });
 
 // Exposer les fonctions pour mise à jour depuis script.js
-window.updateWidgets = function(songTitle, isPlaying, totalSongs) {
+window.updateWidgets = function (songTitle, isPlaying, totalSongs) {
     console.log('Mise à jour widgets:', songTitle, isPlaying, totalSongs);
-    if (widgetManager) {
+    if (window.widgetManager) {
         const status = isPlaying ? 'playing' : 'paused';
-        widgetManager.updateStats(totalSongs, '0:00', status);
+        window.widgetManager.updateStats(totalSongs, '0:00', status);
     }
 };

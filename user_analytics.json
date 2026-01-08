@@ -1,71 +1,27 @@
 {
   "songs": {
     "IBA OH  NATHANIEL BASSEY  DUNSIN OYEKAN  PROPHETIC INSTRUMENTAL CHANTS  .mp3": {
-      "play_count": 19,
-      "skip_count": 0,
-      "total_listening_time": 0,
-      "completion_count": 0,
-      "last_played": "2026-01-08T15:44:39.305241",
-      "average_completion": 0,
-      "rating": 0
-    },
-    "Un compositeur de l'Eternel - Les noms de Dieu.mp3": {
-      "play_count": 11,
-      "skip_count": 0,
-      "total_listening_time": 358.89,
-      "completion_count": 2,
-      "last_played": "2026-01-08T15:45:10.600678",
-      "average_completion": 101.4624910104279,
-      "rating": 58.57
-    },
-    "La mia dolce menestrella .mp3": {
-      "play_count": 3,
-      "skip_count": 0,
-      "total_listening_time": 0,
-      "completion_count": 0,
-      "last_played": "2026-01-08T15:06:41.212285",
-      "average_completion": 0,
-      "rating": 0
-    },
-    "Set Me On Fire  Powerful Prophetic Worship Music.mp3": {
       "play_count": 1,
       "skip_count": 0,
       "total_listening_time": 0,
       "completion_count": 0,
-      "last_played": "2026-01-08T14:56:02.964680",
+      "last_played": "2026-01-08T16:07:44.547193",
       "average_completion": 0,
       "rating": 0
     }
   },
   "listening_patterns": {
     "total_playtime": 0,
-    "total_sessions": 17,
+    "total_sessions": 1,
     "avg_session_duration": 0,
     "preferred_time_of_day": [],
     "skip_rate": 0,
-    "completion_rate": 6.06
+    "completion_rate": 0
   },
   "preferences": {
     "favorite_songs": [],
     "disliked_songs": [],
-    "most_played": [
-      {
-        "song_id": "IBA OH  NATHANIEL BASSEY  DUNSIN OYEKAN  PROPHETIC INSTRUMENTAL CHANTS  .mp3",
-        "play_count": 19
-      },
-      {
-        "song_id": "Un compositeur de l'Eternel - Les noms de Dieu.mp3",
-        "play_count": 10
-      },
-      {
-        "song_id": "La mia dolce menestrella .mp3",
-        "play_count": 3
-      },
-      {
-        "song_id": "Set Me On Fire  Powerful Prophetic Worship Music.mp3",
-        "play_count": 1
-      }
-    ],
+    "most_played": [],
     "recently_skipped": []
   },
   "adaptive_settings": {
