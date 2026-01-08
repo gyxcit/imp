@@ -19,6 +19,7 @@ class AttentionAdapter {
         this.checkInterval = null;
         this.tabVisible = true;
         this.isAdaptingVolume = false; // Flag pour éviter les boucles
+        this.fadeInterval = null; // Intervalle pour le fade volume
 
         this.init();
     }
@@ -167,46 +168,71 @@ class AttentionAdapter {
         this.adaptUI(ui_intensity);
     }
 
+    cancelVolumeAdaptation() {
+        if (this.fadeInterval) {
+            clearInterval(this.fadeInterval);
+            this.fadeInterval = null;
+        }
+        this.isAdaptingVolume = false;
+
+        // Retirer la classe visuelle si elle existe
+        const volumeSlider = document.getElementById('volumeSlider');
+        if (volumeSlider) {
+            volumeSlider.classList.remove('auto-updating');
+        }
+
+        console.log('🛑 Adaptation volume annulée par l\'utilisateur');
+    }
+
     adaptVolume(targetVolume) {
         if (!window.audioElement) return;
 
+        // Annuler toute adaptation en cours
+        if (this.fadeInterval) {
+            clearInterval(this.fadeInterval);
+        }
+
         const currentVolume = window.audioElement.volume * 100;
         const diff = targetVolume - currentVolume;
+
+        // Si la différence est minime, on ignore ou on applique directement
+        if (Math.abs(diff) < 1) return;
 
         console.log(`🔊 Adaptation volume: ${currentVolume.toFixed(0)}% → ${targetVolume}%`);
 
         // Marquer qu'on est en train d'adapter le volume
         this.isAdaptingVolume = true;
 
-        // Transition douce du volume (fade)
-        if (Math.abs(diff) > 5) {
-            const steps = 20;
-            const increment = diff / steps;
-            let step = 0;
+        // Transition douce du volume (fade) - 60 FPS (16ms)
+        // Durée de transition : environ 1 seconde
+        const duration = 1000;
+        const intervalTime = 16;
+        const steps = duration / intervalTime;
+        const increment = diff / steps;
 
-            const fadeInterval = setInterval(() => {
-                if (step >= steps || !window.audioElement) {
-                    clearInterval(fadeInterval);
-                    this.isAdaptingVolume = false; // Fin de l'adaptation
-                    return;
-                }
+        let step = 0;
 
-                const newVolume = currentVolume + (increment * step);
+        this.fadeInterval = setInterval(() => {
+            if (step >= steps || !window.audioElement) {
+                this.cancelVolumeAdaptation(); // Nettoyage propre
+                return;
+            }
 
-                // Mettre à jour le volume audio
-                window.audioElement.volume = Math.max(0, Math.min(1, newVolume / 100));
+            // Calculer le nouveau volume
+            // On relit le volume courant au cas où il aurait changé légèrement
+            let newVolume = (window.audioElement.volume * 100) + increment;
 
-                // Mettre à jour le slider visuel de manière synchronisée
-                this.updateVolumeSlider(newVolume);
+            // Bornes de sécurité
+            newVolume = Math.max(0, Math.min(100, newVolume));
 
-                step++;
-            }, 50); // Transition sur 1 seconde
-        } else {
-            // Petit changement, mise à jour directe
-            window.audioElement.volume = Math.max(0, Math.min(1, targetVolume / 100));
-            this.updateVolumeSlider(targetVolume);
-            this.isAdaptingVolume = false;
-        }
+            // Mettre à jour le volume audio
+            window.audioElement.volume = newVolume / 100;
+
+            // Mettre à jour le slider visuel de manière synchronisée
+            this.updateVolumeSlider(newVolume);
+
+            step++;
+        }, intervalTime);
     }
 
     updateVolumeSlider(volume) {
@@ -389,4 +415,11 @@ window.getAttentionState = function () {
 // Exposer la vérification si on est en train d'adapter le volume
 window.isAdaptingVolume = function () {
     return attentionAdapter ? attentionAdapter.isAdaptingVolume : false;
+};
+
+// Exposer la fonction d'annulation
+window.cancelVolumeAdaptation = function () {
+    if (attentionAdapter) {
+        attentionAdapter.cancelVolumeAdaptation();
+    }
 };

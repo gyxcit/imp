@@ -79,9 +79,9 @@ audioElement.addEventListener('canplay', () => {
 // Slider de volume - TRACKER L'INTERACTION
 const volumeSlider = document.getElementById('volumeSlider');
 volumeSlider.addEventListener('input', () => {
-    // Ne pas tracker si c'est une adaptation automatique
-    if (window.isAdaptingVolume && window.isAdaptingVolume()) {
-        return;
+    // Si une adaptation est en cours, on l'annule pour rendre la main à l'utilisateur
+    if (window.cancelVolumeAdaptation) {
+        window.cancelVolumeAdaptation();
     }
 
     audioElement.volume = volumeSlider.value / 100;
