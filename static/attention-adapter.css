@@ -190,6 +190,42 @@ body.music-pause .controls {
     transition: opacity 2s ease, transform 2s ease, filter 2s ease;
 }
 
+/* Animation du slider de volume lors d'une mise à jour automatique */
+#volumeSlider.auto-updating {
+    animation: pulse-slider 0.3s ease;
+}
+
+@keyframes pulse-slider {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+/* Indicateur visuel que le volume est contrôlé automatiquement */
+#volumeSlider.auto-updating::-webkit-slider-thumb {
+    background: var(--accent);
+    box-shadow: 0 0 15px var(--accent);
+    animation: glow-thumb 0.5s ease;
+}
+
+#volumeSlider.auto-updating::-moz-range-thumb {
+    background: var(--accent);
+    box-shadow: 0 0 15px var(--accent);
+    animation: glow-thumb 0.5s ease;
+}
+
+@keyframes glow-thumb {
+    0%, 100% {
+        box-shadow: 0 0 10px var(--accent);
+    }
+    50% {
+        box-shadow: 0 0 20px var(--accent), 0 0 30px var(--accent);
+    }
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .attention-indicator {

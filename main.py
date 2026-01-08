@@ -264,9 +264,20 @@ def get_current():
 
 # ===== NOUVELLES ROUTES POUR LE SYSTÈME D'ATTENTION =====
 
+@app.route('/api/attention/state')
+def get_attention_state():
+    """
+    Obtenir l'état actuel du système d'attention
+    Cette route est appelée fréquemment et RECALCULE l'attention
+    pour détecter l'inactivité
+    """
+    # Appeler check pour recalculer selon le temps écoulé
+    state = attention_detector.check_and_update_attention()
+    return jsonify(state)
+
 @app.route('/api/attention/track', methods=['POST'])
 def track_attention():
-    """Tracker une interaction utilisateur pour le système d'attention"""
+    """Enregistrer une interaction utilisateur"""
     data = request.get_json()
     interaction_type = data.get('type')
     interaction_data = data.get('data', {})
@@ -277,11 +288,6 @@ def track_attention():
         'success': True,
         'state': state
     })
-
-@app.route('/api/attention/state')
-def get_attention_state():
-    """Obtenir l'état actuel du système d'attention"""
-    return jsonify(attention_detector.get_state())
 
 @app.route('/api/attention/reset', methods=['POST'])
 def reset_attention():
