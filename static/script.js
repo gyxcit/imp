@@ -72,24 +72,17 @@ audioElement.addEventListener('canplay', () => {
     console.log('Audio prêt à être joué');
 });
 
-// Slider de progression
-const progressSlider = document.getElementById('progressSlider');
-progressSlider.addEventListener('input', () => {
-    isSeekingProgress = true;
-    const time = (progressSlider.value / 100) * audioElement.duration;
-    document.getElementById('currentTime').textContent = formatTime(time);
-});
-
-progressSlider.addEventListener('change', () => {
-    const time = (progressSlider.value / 100) * audioElement.duration;
-    audioElement.currentTime = time;
-    isSeekingProgress = false;
-});
-
-// Slider de volume
+// Slider de volume - TRACKER L'INTERACTION
 const volumeSlider = document.getElementById('volumeSlider');
 volumeSlider.addEventListener('input', () => {
     audioElement.volume = volumeSlider.value / 100;
+    
+    // Tracker le changement de volume
+    if (window.trackAttentionInteraction) {
+        window.trackAttentionInteraction('volume', {
+            volume: volumeSlider.value
+        });
+    }
 });
 
 function formatTime(seconds) {
@@ -282,6 +275,11 @@ async function togglePlayPause() {
         clientStateVersion = data.state_version;
         isPlaying = data.is_playing;
         
+        // Tracker play/pause
+        if (window.trackAttentionInteraction) {
+            window.trackAttentionInteraction(isPlaying ? 'play' : 'pause');
+        }
+        
         if (isPlaying && audioElement.src) {
             try {
                 await audioElement.play();
@@ -303,14 +301,9 @@ async function togglePlayPause() {
 }
 
 async function nextSong() {
-    // Tracker le skip si la chanson n'était pas terminée
-    if (currentSong && audioElement.currentTime < audioElement.duration - 5) {
-        if (window.trackSkip) {
-            window.trackSkip(currentSong);
-        }
-        if (window.trackSongEnd) {
-            window.trackSongEnd(false);
-        }
+    // Tracker le skip
+    if (window.trackAttentionInteraction) {
+        window.trackAttentionInteraction('skip');
     }
     
     try {
@@ -360,6 +353,11 @@ async function nextSong() {
 }
 
 async function previousSong() {
+    // Tracker la navigation
+    if (window.trackAttentionInteraction) {
+        window.trackAttentionInteraction('seek');
+    }
+    
     try {
         const response = await fetch('/api/previous', {
             method: 'POST'
@@ -382,7 +380,6 @@ async function previousSong() {
             audioElement.src = `/music/${currentSong}`;
             document.getElementById('progressSlider').value = 0;
             
-            // Maintenir l'état de lecture du serveur
             isPlaying = data.is_playing;
             
             if (isPlaying) {
@@ -407,6 +404,27 @@ async function previousSong() {
         showNotification('Erreur lors du passage à la chanson précédente');
     }
 }
+
+// Slider de progression - TRACKER L'INTERACTION
+const progressSlider = document.getElementById('progressSlider');
+progressSlider.addEventListener('input', () => {
+    isSeekingProgress = true;
+    const time = (progressSlider.value / 100) * audioElement.duration;
+    document.getElementById('currentTime').textContent = formatTime(time);
+});
+
+progressSlider.addEventListener('change', () => {
+    const time = (progressSlider.value / 100) * audioElement.duration;
+    audioElement.currentTime = time;
+    isSeekingProgress = false;
+    
+    // Tracker le seek
+    if (window.trackAttentionInteraction) {
+        window.trackAttentionInteraction('seek', {
+            position: time
+        });
+    }
+});
 
 // Gestion de la playlist
 let playlistOpen = false;
@@ -544,6 +562,11 @@ async function updatePlaylistMenu() {
 }
 
 async function playFromPlaylist(index) {
+    // Tracker la sélection depuis la playlist
+    if (window.trackAttentionInteraction) {
+        window.trackAttentionInteraction('playlist', { index });
+    }
+    
     try {
         const response = await fetch('/api/play-index', {
             method: 'POST',

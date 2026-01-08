@@ -56,6 +56,13 @@ class WidgetManager {
                     </span>
                 </span>
             </div>
+            <div class="info-stat">
+                <span class="info-stat-label">Attention</span>
+                <span class="info-stat-value">
+                    <span class="attention-score" id="statAttentionScore">100</span>
+                    <span class="attention-score-label">/100</span>
+                </span>
+            </div>
         `;
         
         document.body.appendChild(panel);
@@ -208,6 +215,25 @@ class WidgetManager {
             } else {
                 statusEl.className = 'status-badge';
                 statusEl.innerHTML = '<span>Arrêté</span>';
+            }
+        }
+    }
+
+    updateAttentionScore(score) {
+        const scoreEl = document.getElementById('statAttentionScore');
+        if (scoreEl) {
+            scoreEl.textContent = Math.round(score);
+            
+            // Colorier selon le score
+            scoreEl.className = 'attention-score';
+            if (score >= 75) {
+                scoreEl.classList.add('score-high');
+            } else if (score >= 50) {
+                scoreEl.classList.add('score-medium');
+            } else if (score >= 25) {
+                scoreEl.classList.add('score-low');
+            } else {
+                scoreEl.classList.add('score-none');
             }
         }
     }

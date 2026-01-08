@@ -9,6 +9,9 @@ import json
 from datetime import datetime
 import time
 
+# Importer le système d'attention
+from attention_system import AttentionDetector
+
 app = Flask(__name__)
 
 # Configuration
@@ -31,9 +34,12 @@ state_version = 0
 shuffle_mode = False
 repeat_mode = False
 
-# Système d'analyse comportementale
+# NOUVEAU: Système d'attention
+attention_detector = AttentionDetector()
+
+# Système d'analyse comportementale (existant)
 user_analytics = {
-    'songs': {},  # Statistiques par chanson
+    'songs': {},
     'listening_patterns': {
         'total_playtime': 0,
         'total_sessions': 0,
@@ -49,8 +55,8 @@ user_analytics = {
         'recently_skipped': []
     },
     'adaptive_settings': {
-        'ui_complexity': 'standard',  # simple, standard, advanced
-        'recommendation_aggressiveness': 'medium',  # low, medium, high
+        'ui_complexity': 'standard',
+        'recommendation_aggressiveness': 'medium',
         'auto_skip_enabled': False,
         'smart_shuffle_enabled': False
     }
@@ -256,13 +262,44 @@ def get_current():
         'state_version': state_version
     })
 
-# Routes Analytics
+# ===== NOUVELLES ROUTES POUR LE SYSTÈME D'ATTENTION =====
+
+@app.route('/api/attention/track', methods=['POST'])
+def track_attention():
+    """Tracker une interaction utilisateur pour le système d'attention"""
+    data = request.get_json()
+    interaction_type = data.get('type')
+    interaction_data = data.get('data', {})
+    
+    state = attention_detector.track_interaction(interaction_type, interaction_data)
+    
+    return jsonify({
+        'success': True,
+        'state': state
+    })
+
+@app.route('/api/attention/state')
+def get_attention_state():
+    """Obtenir l'état actuel du système d'attention"""
+    return jsonify(attention_detector.get_state())
+
+@app.route('/api/attention/reset', methods=['POST'])
+def reset_attention():
+    """Réinitialiser le système d'attention"""
+    attention_detector.reset()
+    return jsonify({'success': True})
+
+# ===== ROUTES ANALYTICS EXISTANTES =====
+
 @app.route('/api/analytics/start-session', methods=['POST'])
 def start_session():
     """Démarrer une session d'écoute"""
-    current_session['start_time'] = time.time()
     user_analytics['listening_patterns']['total_sessions'] += 1
     save_analytics()
+    
+    # Tracker pour le système d'attention
+    attention_detector.track_interaction('session_start')
+    
     return jsonify({'success': True})
 
 @app.route('/api/analytics/song-start', methods=['POST'])
@@ -273,12 +310,13 @@ def song_start():
     
     if song_id:
         init_song_stats(song_id)
-        current_session['current_song'] = song_id
-        current_session['song_start_time'] = time.time()
         
         user_analytics['songs'][song_id]['play_count'] += 1
         user_analytics['songs'][song_id]['last_played'] = datetime.now().isoformat()
         save_analytics()
+        
+        # Tracker pour le système d'attention
+        attention_detector.track_interaction('play', {'song': song_id})
     
     return jsonify({'success': True})
 
@@ -340,6 +378,9 @@ def song_skip():
         update_adaptive_settings()
         
         save_analytics()
+        
+        # Tracker pour le système d'attention
+        attention_detector.track_interaction('skip', {'song': song_id})
     
     return jsonify({'success': True})
 
@@ -424,6 +465,13 @@ def play_pause():
     if playlist:
         is_playing = not is_playing
         increment_state_version()
+        
+        # Tracker pour le système d'attention
+        if is_playing:
+            attention_detector.track_interaction('play')
+        else:
+            attention_detector.track_interaction('pause')
+    
     return jsonify({
         'is_playing': is_playing,
         'state_version': state_version
@@ -439,6 +487,10 @@ def play_index():
         current_index = index
         is_playing = True
         increment_state_version()
+        
+        # Tracker pour le système d'attention
+        attention_detector.track_interaction('playlist', {'index': index})
+        
         return jsonify({
             'song': playlist[current_index],
             'index': current_index,
@@ -462,6 +514,10 @@ def next_song():
             current_index = (current_index + 1) % len(playlist)
         
         increment_state_version()
+        
+        # Tracker pour le système d'attention
+        attention_detector.track_interaction('skip')
+        
         return jsonify({
             'song': playlist[current_index],
             'index': current_index,
@@ -476,6 +532,10 @@ def previous_song():
     if playlist:
         current_index = (current_index - 1) % len(playlist)
         increment_state_version()
+        
+        # Tracker pour le système d'attention
+        attention_detector.track_interaction('seek')
+        
         return jsonify({
             'song': playlist[current_index],
             'index': current_index,
