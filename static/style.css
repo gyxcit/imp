@@ -702,6 +702,8 @@ input[type="range"]::-webkit-slider-thumb:hover {
     opacity: 1;
 }
 
+
+
 /* --- SIDEBAR DROIT --- */
 .sidebar-right {
     width: 400px;
