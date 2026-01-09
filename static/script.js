@@ -426,8 +426,7 @@ function startAudioCapture(stream) {
     scriptProcessor = audioContext.createScriptProcessor(4096, 1, 1);
 
     scriptProcessor.onaudioprocess = (audioProcessingEvent) => {
-        if (!window.isPlaying) return; // Optimisation: ne pas envoyer si musique en pause? Ou toujours envoyer?
-
+        // Send audio regardless of music playing state
         const inputBuffer = audioProcessingEvent.inputBuffer;
         const inputData = inputBuffer.getChannelData(0);
 
@@ -474,13 +473,25 @@ function arrayBufferToBase64(buffer) {
 // Écouter les résultats audio
 socket.on('audio_result', (data) => {
     if (data && data.result) {
-        const emotion = data.result.emotion || 'Neutre';
+        // Backend renvoie 'emotion_hint' not 'emotion'
+        const emotionEn = data.result.emotion_hint || 'neutral';
+
+        // Traduire en français
+        const emotionMap = {
+            'excited': 'Excité',
+            'neutral': 'Neutre',
+            'calm': 'Calme'
+        };
+
+        const emotion = emotionMap[emotionEn] || emotionEn;
         window.lastVoiceEmotion = emotion; // Stocker pour usage combiné
 
         const voiceElem = document.getElementById('voiceEmotion');
         if (voiceElem) {
             voiceElem.textContent = emotion;
         }
+
+        console.log('🎤 Émotion vocale:', emotion, '(energy:', data.result.energy_level + ')');
     }
 });
 
