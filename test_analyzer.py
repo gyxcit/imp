@@ -68,7 +68,7 @@ def handle_video_frame(data):
         current_state['video'] = video_result
         current_state['frame_count'] += 1
         
-        print(f"📹 Frame {current_state['frame_count']}: Face={video_result['face_detected']}, Engagement={video_result['engagement_score']}")
+        # print(f"📹 Frame {current_state['frame_count']}: Face={video_result['face_detected']}, Engagement={video_result['engagement_score']}")
         
         # Fusion si audio disponible
         if current_state['audio']:
@@ -77,7 +77,7 @@ def handle_video_frame(data):
                 current_state['audio']
             )
             current_state['fusion'] = fusion_result
-            print(f"🧠 Fusion: Attention={fusion_result['attention_score']}, Mouvements={len(fusion_engine.head_movement_history)}")
+            # print(f"🧠 Fusion: Attention={fusion_result['attention_score']}, Mouvements={len(fusion_engine.head_movement_history)}")
             emit('fusion_update', fusion_result)
         
         # Envoyer résultat vidéo
@@ -103,7 +103,7 @@ def handle_audio_chunk(data):
         current_state['audio'] = audio_result
         current_state['audio_chunk_count'] += 1
 
-        print(f"🎤 Chunk {current_state['audio_chunk_count']}: Speech={audio_result['speech_detected']}, Energy={audio_result['energy_level']}")
+        # print(f"🎤 Chunk {current_state['audio_chunk_count']}: Speech={audio_result['speech_detected']}, Energy={audio_result['energy_level']}")
 
         if current_state['video']:
             fusion_result = fusion_engine.fuse_signals(
