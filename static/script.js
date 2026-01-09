@@ -408,6 +408,82 @@ function sendVideoFrame() {
     socket.emit('video_frame', { frame: dataURL });
 }
 
+// --- AUDIO CAPTURE ---
+let audioContext = null;
+let scriptProcessor = null;
+let microphone = null;
+
+function startAudioCapture(stream) {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    // Créer la source
+    microphone = audioContext.createMediaStreamSource(stream);
+
+    // Créer le processeur (bufferSize, inputChannels, outputChannels)
+    // 4096 = ~0.1s de latence à 44.1kHz, bon compromis
+    scriptProcessor = audioContext.createScriptProcessor(4096, 1, 1);
+
+    scriptProcessor.onaudioprocess = (audioProcessingEvent) => {
+        if (!window.isPlaying) return; // Optimisation: ne pas envoyer si musique en pause? Ou toujours envoyer?
+
+        const inputBuffer = audioProcessingEvent.inputBuffer;
+        const inputData = inputBuffer.getChannelData(0);
+
+        // Convertir Float32Array en ArrayBuffer pour l'envoi
+        // On envoie directement le buffer binaire encodé en base64
+        const buffer = inputData.buffer;
+        const base64Audio = arrayBufferToBase64(buffer);
+
+        socket.emit('audio_chunk', { audio: base64Audio });
+    };
+
+    microphone.connect(scriptProcessor);
+    scriptProcessor.connect(audioContext.destination);
+
+    console.log('🎤 Capture audio démarrée');
+}
+
+function stopAudioCapture() {
+    if (microphone) {
+        microphone.disconnect();
+        microphone = null;
+    }
+    if (scriptProcessor) {
+        scriptProcessor.disconnect();
+        scriptProcessor = null;
+    }
+    // Ne pas fermer le context pour pouvoir le réutiliser, ou le suspendre
+    if (audioContext && audioContext.state !== 'closed') {
+        audioContext.suspend();
+    }
+}
+
+// Convertir ArrayBuffer en Base64
+function arrayBufferToBase64(buffer) {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary);
+}
+
+// Écouter les résultats audio
+socket.on('audio_result', (data) => {
+    if (data && data.result) {
+        const emotion = data.result.emotion || 'Neutre';
+        window.lastVoiceEmotion = emotion; // Stocker pour usage combiné
+
+        const voiceElem = document.getElementById('voiceEmotion');
+        if (voiceElem) {
+            voiceElem.textContent = emotion;
+        }
+    }
+});
+
 document.addEventListener('DOMContentLoaded', () => {
     initialLoad();
     initSidebarLogic();
@@ -431,8 +507,10 @@ function initSidebarLogic() {
                 // Feedback visuel
                 placeholder.innerHTML = '<span>⏳ Activation...</span>';
 
+                // Demander l'accès Vidéo ET Audio
                 webcamStream = await navigator.mediaDevices.getUserMedia({
-                    video: { width: 640, height: 360, frameRate: 15 }
+                    video: { width: 640, height: 360, frameRate: 15 },
+                    audio: true
                 });
 
                 videoElement.srcObject = webcamStream;
@@ -448,14 +526,17 @@ function initSidebarLogic() {
                 }
 
                 console.log('📷 Caméra activée');
-                showNotification('Caméra activée');
+                showNotification('Caméra et Micro activés');
 
-                // Démarrer l'envoi des frames vers le serveur Python
+                // --- CAPTURE VIDÉO ---
                 if (frameInterval) clearInterval(frameInterval);
                 frameInterval = setInterval(sendVideoFrame, 150); // ~10 FPS max pour le backend
 
+                // --- CAPTURE AUDIO ---
+                startAudioCapture(webcamStream);
+
             } catch (err) {
-                console.error("Erreur accès caméra:", err);
+                console.error("Erreur accès caméra/micro:", err);
                 e.target.checked = false;
                 placeholder.style.display = 'flex';
                 placeholder.innerHTML = `
@@ -465,13 +546,15 @@ function initSidebarLogic() {
                     </svg>
                     <span>Erreur d'accès</span>
                 `;
-                showNotification("Impossible d'accéder à la caméra");
-                // alert("Impossible d'accéder à la caméra. Vérifiez les permissions.");
+                showNotification("Impossible d'accéder à la caméra/micro");
             }
         } else {
-            // Arrêter la capture
+            // Arrêter la capture Vidéo
             if (frameInterval) clearInterval(frameInterval);
             frameInterval = null;
+
+            // Arrêter la capture Audio
+            stopAudioCapture();
 
             if (webcamStream) {
                 webcamStream.getTracks().forEach(track => track.stop());
@@ -495,6 +578,9 @@ function initSidebarLogic() {
                 const ctx = canvas.getContext('2d');
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
             }
+            // Reset valeurs UI
+            window.lastVoiceEmotion = '--';
+
             console.log('📷 Caméra désactivée');
             showNotification('Caméra désactivée');
         }
