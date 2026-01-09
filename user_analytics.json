@@ -10,20 +10,20 @@
       "rating": 35.56
     },
     "IBA OH  NATHANIEL BASSEY  DUNSIN OYEKAN  PROPHETIC INSTRUMENTAL CHANTS  .mp3": {
-      "play_count": 30,
+      "play_count": 33,
       "skip_count": 0,
       "total_listening_time": 0,
       "completion_count": 0,
-      "last_played": "2026-01-09T05:17:35.678543",
+      "last_played": "2026-01-09T06:03:55.261349",
       "average_completion": 0,
       "rating": 0
     },
     "La mia dolce menestrella .mp3": {
-      "play_count": 19,
+      "play_count": 21,
       "skip_count": 0,
       "total_listening_time": 0,
       "completion_count": 0,
-      "last_played": "2026-01-09T05:20:24.268325",
+      "last_played": "2026-01-09T06:01:54.815781",
       "average_completion": 0,
       "rating": 0
     },
@@ -39,11 +39,11 @@
   },
   "listening_patterns": {
     "total_playtime": 0,
-    "total_sessions": 12,
+    "total_sessions": 17,
     "avg_session_duration": 0,
     "preferred_time_of_day": [],
     "skip_rate": 0,
-    "completion_rate": 1.2
+    "completion_rate": 1.12
   },
   "preferences": {
     "favorite_songs": [],
@@ -51,15 +51,15 @@
     "most_played": [
       {
         "song_id": "IBA OH  NATHANIEL BASSEY  DUNSIN OYEKAN  PROPHETIC INSTRUMENTAL CHANTS  .mp3",
-        "play_count": 30
+        "play_count": 32
       },
       {
         "song_id": "Un compositeur de l'Eternel - Les noms de Dieu.mp3",
-        "play_count": 21
+        "play_count": 22
       },
       {
         "song_id": "La mia dolce menestrella .mp3",
-        "play_count": 18
+        "play_count": 21
       },
       {
         "song_id": "Set Me On Fire  Powerful Prophetic Worship Music.mp3",
