@@ -1,29 +1,29 @@
 {
   "songs": {
     "Un compositeur de l'Eternel - Les noms de Dieu.mp3": {
-      "play_count": 21,
+      "play_count": 22,
       "skip_count": 0,
       "total_listening_time": 178.157,
       "completion_count": 1,
-      "last_played": "2026-01-09T05:10:24.147198",
+      "last_played": "2026-01-09T05:18:03.980932",
       "average_completion": 100.09719974829198,
       "rating": 35.56
     },
     "IBA OH  NATHANIEL BASSEY  DUNSIN OYEKAN  PROPHETIC INSTRUMENTAL CHANTS  .mp3": {
-      "play_count": 28,
+      "play_count": 30,
       "skip_count": 0,
       "total_listening_time": 0,
       "completion_count": 0,
-      "last_played": "2026-01-09T05:11:36.792359",
+      "last_played": "2026-01-09T05:17:35.678543",
       "average_completion": 0,
       "rating": 0
     },
     "La mia dolce menestrella .mp3": {
-      "play_count": 18,
+      "play_count": 19,
       "skip_count": 0,
       "total_listening_time": 0,
       "completion_count": 0,
-      "last_played": "2026-01-09T05:11:55.610059",
+      "last_played": "2026-01-09T05:20:24.268325",
       "average_completion": 0,
       "rating": 0
     },
@@ -39,11 +39,11 @@
   },
   "listening_patterns": {
     "total_playtime": 0,
-    "total_sessions": 11,
+    "total_sessions": 12,
     "avg_session_duration": 0,
     "preferred_time_of_day": [],
     "skip_rate": 0,
-    "completion_rate": 1.28
+    "completion_rate": 1.2
   },
   "preferences": {
     "favorite_songs": [],
@@ -51,15 +51,15 @@
     "most_played": [
       {
         "song_id": "IBA OH  NATHANIEL BASSEY  DUNSIN OYEKAN  PROPHETIC INSTRUMENTAL CHANTS  .mp3",
-        "play_count": 27
+        "play_count": 30
       },
       {
         "song_id": "Un compositeur de l'Eternel - Les noms de Dieu.mp3",
-        "play_count": 20
+        "play_count": 21
       },
       {
         "song_id": "La mia dolce menestrella .mp3",
-        "play_count": 17
+        "play_count": 18
       },
       {
         "song_id": "Set Me On Fire  Powerful Prophetic Worship Music.mp3",
