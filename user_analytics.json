@@ -1,45 +1,45 @@
 {
   "songs": {
     "Un compositeur de l'Eternel - Les noms de Dieu.mp3": {
-      "play_count": 12,
+      "play_count": 15,
       "skip_count": 0,
       "total_listening_time": 0,
       "completion_count": 0,
-      "last_played": "2026-01-09T04:51:13.889712",
+      "last_played": "2026-01-09T04:58:06.653019",
       "average_completion": 0,
       "rating": 0
     },
     "IBA OH  NATHANIEL BASSEY  DUNSIN OYEKAN  PROPHETIC INSTRUMENTAL CHANTS  .mp3": {
-      "play_count": 17,
+      "play_count": 19,
       "skip_count": 0,
       "total_listening_time": 0,
       "completion_count": 0,
-      "last_played": "2026-01-09T04:52:30.471131",
+      "last_played": "2026-01-09T04:57:35.965247",
       "average_completion": 0,
       "rating": 0
     },
     "La mia dolce menestrella .mp3": {
-      "play_count": 9,
+      "play_count": 12,
       "skip_count": 0,
       "total_listening_time": 0,
       "completion_count": 0,
-      "last_played": "2026-01-09T04:51:34.367702",
+      "last_played": "2026-01-09T04:57:14.690651",
       "average_completion": 0,
       "rating": 0
     },
     "Set Me On Fire  Powerful Prophetic Worship Music.mp3": {
-      "play_count": 8,
+      "play_count": 11,
       "skip_count": 0,
       "total_listening_time": 0,
       "completion_count": 0,
-      "last_played": "2026-01-09T04:51:55.888222",
+      "last_played": "2026-01-09T04:57:25.653558",
       "average_completion": 0,
       "rating": 0
     }
   },
   "listening_patterns": {
     "total_playtime": 0,
-    "total_sessions": 7,
+    "total_sessions": 8,
     "avg_session_duration": 0,
     "preferred_time_of_day": [],
     "skip_rate": 0,
@@ -51,7 +51,7 @@
     "most_played": [
       {
         "song_id": "IBA OH  NATHANIEL BASSEY  DUNSIN OYEKAN  PROPHETIC INSTRUMENTAL CHANTS  .mp3",
-        "play_count": 16
+        "play_count": 17
       },
       {
         "song_id": "Un compositeur de l'Eternel - Les noms de Dieu.mp3",
@@ -59,7 +59,7 @@
       },
       {
         "song_id": "La mia dolce menestrella .mp3",
-        "play_count": 9
+        "play_count": 10
       },
       {
         "song_id": "Set Me On Fire  Powerful Prophetic Worship Music.mp3",

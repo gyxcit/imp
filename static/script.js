@@ -298,7 +298,26 @@ socket.on('connect', () => {
 // Écouter les résultats d'analyse vidéo pour mettre à jour l'UI
 socket.on('video_result', (data) => {
     if (data && data.result) {
+        // Dessiner l'overlay
         drawTrackingOverlay(data.result);
+
+        // Mettre à jour les métriques UI avec les vraies données
+        if (data.result.face_detected && data.result.head_pose) {
+            // Arrêter la simulation si elle tourne encore
+            if (analysisInterval) {
+                clearInterval(analysisInterval);
+                analysisInterval = null;
+            }
+
+            updateMetricsUI({
+                headX: data.result.head_pose.yaw.toFixed(1),
+                headY: data.result.head_pose.pitch.toFixed(1),
+                energy: data.result.engagement_score || 0,
+                voiceEmotion: window.lastVoiceEmotion || '--', // Sera mis à jour par audio_result
+                faceEmotion: data.result.emotion_hint || '--',
+                score: data.result.engagement_score || 0
+            });
+        }
     }
 });
 
@@ -493,8 +512,8 @@ function initSidebarLogic() {
         });
     }
 
-    // 3. Démarrer la simulation des données
-    startAnalysisSimulation();
+    // 3. Démarrer la simulation SEULEMENT si pas de vraie donnée (fallback)
+    // startAnalysisSimulation();
     console.log('✅ Sidebar initialisé');
 }
 
