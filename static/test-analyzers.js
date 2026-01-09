@@ -239,21 +239,6 @@ class AnalyzerTester {
         const emotionBadge = this.getEmotionBadge(result.emotion_hint);
         document.getElementById('videoEmotion').innerHTML = emotionBadge;
 
-        // NOUVEAU: Mains et bras détectés
-        const handsDetected = result.hands_detected || false;
-        const handsCount = result.hands_count || 0;
-        const armsDetected = result.arms_detected || false;
-        const armsCount = result.arms_count || 0;
-        
-        document.getElementById('handsDetected').textContent = 
-            handsDetected ? `✅ Oui (${handsCount})` : '❌ Non';
-            
-        // Ajouter affichage des bras si l'élément existe
-        const armsElement = document.getElementById('armsDetected');
-        if (armsElement) {
-            armsElement.textContent = armsDetected ? `✅ Oui (${armsCount})` : '❌ Non';
-        }
-
         // Données expression faciale (OpenCV)
         if (result.facial_expression) {
             const expr = result.facial_expression;
@@ -324,73 +309,12 @@ class AnalyzerTester {
         // Trail de mouvement
         this.drawMovementTrail(headX, headY);
 
-        // NOUVEAU: Dessiner mains et bras
-        this.drawHandsAndArms(result, w, h);
-
         // Texte informations
         this.trackingContext.fillStyle = '#ffffff';
         this.trackingContext.font = '12px Arial';
         this.trackingContext.textAlign = 'left';
         this.trackingContext.fillText(`Yaw: ${yaw.toFixed(1)}°`, 10, 30);
         this.trackingContext.fillText(`Pitch: ${pitch.toFixed(1)}°`, 10, 50);
-        this.trackingContext.fillText(`Mains: ${result.hands_count || 0}`, 10, 70);
-        this.trackingContext.fillText(`Bras: ${result.arms_count || 0}`, 10, 90);
-    }
-
-    drawHandsAndArms(result, canvasWidth, canvasHeight) {
-        // Calculer le facteur d'échelle (le canvas overlay correspond à la vidéo)
-        const scaleX = canvasWidth / (this.videoElement.videoWidth || 640);
-        const scaleY = canvasHeight / (this.videoElement.videoHeight || 480);
-
-        // Dessiner les mains
-        if (result.hands_positions && result.hands_positions.length > 0) {
-            this.trackingContext.strokeStyle = '#ff6600';
-            this.trackingContext.fillStyle = 'rgba(255, 102, 0, 0.3)';
-            this.trackingContext.lineWidth = 2;
-
-            result.hands_positions.forEach((hand, index) => {
-                const x = hand[0] * scaleX;
-                const y = hand[1] * scaleY;
-                const w = hand[2] * scaleX;
-                const h = hand[3] * scaleY;
-
-                // Rectangle pour la main
-                this.trackingContext.beginPath();
-                this.trackingContext.rect(x, y, w, h);
-                this.trackingContext.stroke();
-                this.trackingContext.fill();
-
-                // Label "MAIN"
-                this.trackingContext.fillStyle = '#ff6600';
-                this.trackingContext.font = 'bold 12px Arial';
-                this.trackingContext.fillText(`MAIN ${index + 1}`, x, y - 5);
-            });
-        }
-
-        // Dessiner les bras
-        if (result.arms_positions && result.arms_positions.length > 0) {
-            this.trackingContext.strokeStyle = '#0066ff';
-            this.trackingContext.fillStyle = 'rgba(0, 102, 255, 0.2)';
-            this.trackingContext.lineWidth = 2;
-
-            result.arms_positions.forEach((arm, index) => {
-                const x = arm[0] * scaleX;
-                const y = arm[1] * scaleY;
-                const w = arm[2] * scaleX;
-                const h = arm[3] * scaleY;
-
-                // Rectangle pour le bras
-                this.trackingContext.beginPath();
-                this.trackingContext.rect(x, y, w, h);
-                this.trackingContext.stroke();
-                this.trackingContext.fill();
-
-                // Label "BRAS"
-                this.trackingContext.fillStyle = '#0066ff';
-                this.trackingContext.font = 'bold 12px Arial';
-                this.trackingContext.fillText(`BRAS ${index + 1}`, x, y - 5);
-            });
-        }
     }
 
     drawDirectionArrow(headX, headY, yaw, pitch) {
@@ -503,6 +427,15 @@ class AnalyzerTester {
         // Pattern
         const patternBadge = this.getPatternBadge(data.pattern);
         document.getElementById('fusionPattern').innerHTML = patternBadge;
+        
+        // NOUVEAU: Afficher les indicateurs mouvement/parole
+        const movementIcon = data.movement_detected ? '✅ Oui' : '❌ Non';
+        const speechIcon = data.speech_detected ? '✅ Oui' : '❌ Non';
+        const bothIcon = data.both_active ? '✅ Actifs' : '❌ Inactifs';
+        
+        document.getElementById('movementIndicator').textContent = movementIcon;
+        document.getElementById('speechIndicator').textContent = speechIcon;
+        document.getElementById('bothIndicator').textContent = bothIcon;
 
         // Alerte pattern
         const alertEl = document.getElementById('patternAlert');
@@ -514,7 +447,7 @@ class AnalyzerTester {
             alertEl.classList.remove('active');
         }
 
-        this.addLog(`🧠 Fusion: Attention ${attention}/100, Pattern: ${data.pattern}`);
+        this.addLog(`🧠 Fusion: Attention ${attention}/100, Pattern: ${data.pattern}, Mouvement: ${data.movement_detected}, Parole: ${data.speech_detected}`);
     }
 
     getEmotionBadge(emotion) {
@@ -575,9 +508,6 @@ class AnalyzerTester {
         document.getElementById('videoEmotion').innerHTML = '<span class="badge info">neutral</span>';
         document.getElementById('frameCount').textContent = '0';
 
-
-        // Mains
-        document.getElementById('handsDetected').textContent = '❌ Non';
         // Audio
         document.getElementById('speechDetected').textContent = '❌ Non';
         document.getElementById('energyLevel').textContent = '0%';

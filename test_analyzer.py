@@ -28,7 +28,7 @@ current_state = {
 
 # Variable globale pour le throttling
 last_analysis_time = 0
-ANALYSIS_INTERVAL = 0.5  # Analyser max 2 fois par seconde
+ANALYSIS_INTERVAL = 0.05  # Analyser env. 20 fois par seconde pour capter les mouvements rapides
 
 @app.route('/')
 def index():

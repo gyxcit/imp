@@ -41,7 +41,7 @@ class AudioAnalyzer:
             
             # Normaliser l'énergie (typiquement entre 0 et 1)
             self.state['energy_level'] = min(100, int(energy * 1000))
-            self.state['speech_detected'] = energy > 0.01
+            self.state['speech_detected'] = energy > 0.06 # Seuil augmenté sur demande (était 0.03)
             
             if self.state['speech_detected']:
                 # Estimation pitch simple via zero-crossing rate

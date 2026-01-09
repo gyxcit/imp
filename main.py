@@ -9,10 +9,19 @@ import json
 from datetime import datetime
 import time
 
+print("📦 Imports de base OK")
+
 # Importer le système d'attention
 from attention_system import AttentionDetector
+print("✅ AttentionDetector importé")
+
 from flask_socketio import SocketIO, emit
+print("✅ Flask-SocketIO importé")
+
+print("⏳ Chargement de MultimodalSystem (MediaPipe)... cela peut prendre 30s-1min au premier démarrage")
 from multimodal_system import MultimodalSystem
+print("✅ MultimodalSystem importé")
+
 import base64
 import numpy as np
 import cv2
@@ -704,6 +713,11 @@ def handle_audio_chunk(data):
 
 # Modifier run final
 if __name__ == "__main__":
+    print("🚀 Démarrage du serveur...")
+    print("📦 Chargement des analytics...")
     load_analytics()
+    print("🎵 Chargement des fichiers musique...")
     load_existing_music_files()
+    print("✅ Serveur prêt sur http://localhost:5000")
+    print("⏳ Attente de connexions...")
     socketio.run(app, debug=True, host='0.0.0.0', port=5000)

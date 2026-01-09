@@ -7,9 +7,14 @@ class EmotionFusion:
         self.history = []
         self.max_history = 10
         
-        # NOUVEAU: Historique des mouvements de tête
+        # Historique des mouvements de tête
         self.head_movement_history = []
-        self.movement_window = 4.0  # 4 secondes pour plus de stabilité
+        self.movement_window = 4.0  # 4 secondes
+        
+        # NOUVEAU: Persistance des détections
+        self.movement_detected_once = False
+        self.speech_detected_once = False
+        self.start_time = time.time() # Pour ignorer les faux positifs au démarrage
         
     def fuse_signals(self, video_state: Dict, audio_state: Dict) -> Dict:
         """
@@ -28,10 +33,27 @@ class EmotionFusion:
         # Détection patterns
         pattern = self._detect_pattern(video_state, audio_state)
         
+        # NOUVEAU: Indicateurs booléens pour mouvement et parole
+        # Une fois détecté, ça reste True
+        movement_detected = self._detect_significant_head_movement()
+        speech_detected = audio_state.get('speech_detected', False)
+        
+        # Période de chauffe (3 secondes) pour éviter les faux positifs au lancement
+        if time.time() - self.start_time > 3.0:
+            if movement_detected:
+                self.movement_detected_once = True
+            if speech_detected:
+                self.speech_detected_once = True
+        
+        both_active = self.movement_detected_once and self.speech_detected_once
+        
         unified_state = {
             'attention_score': attention_score,
             'emotion': emotion,
             'pattern': pattern,
+            'movement_detected': self.movement_detected_once,
+            'speech_detected': self.speech_detected_once,
+            'both_active': both_active,
             'video': video_state,
             'audio': audio_state
         }
@@ -64,144 +86,92 @@ class EmotionFusion:
             if current_time - movement['timestamp'] <= self.movement_window
         ]
     
-    def _compute_attention(self, video: Dict, audio: Dict) -> int:
-        """Calcul attention 0-100 avec nouvelle logique et mouvements sophistiqués"""
-        
-        # Détection présence
-        face_detected = video.get('face_detected', False)
-        speech_detected = audio.get('speech_detected', False)
-        head_movement = self._detect_significant_head_movement()
-        
-        # LOGIQUE AMÉLIORÉE :
-        # 1. Pas de mouvement + pas d'audio = score TRÈS bas (5-15)
-        if not head_movement and not speech_detected:
-            if face_detected:
-                return 10  # Présent mais totalement inactif
-            else:
-                return 5   # Absent et inactif
-        
-        # 2. Audio + mouvements de tête = score très haut (85-100)
-        if head_movement and speech_detected:
-            # Bonus basé sur la qualité des mouvements
-            movement_quality = self._get_movement_quality()
-            energy = audio.get('energy_level', 0)
-            
-            base_high_score = 85
-            base_high_score += min(10, movement_quality * 2)  # +0 à +10
-            base_high_score += min(5, energy // 20)           # +0 à +5
-            
-            return min(100, base_high_score)
-        
-        # 3. L'un des deux seulement = score moyen-bas (25-60)
-        if head_movement or speech_detected:
-            base_score = 30
-            
-            # Bonus selon la qualité
-            if head_movement:
-                movement_quality = self._get_movement_quality()
-                base_score += 15 + (movement_quality * 10)  # +15 à +25
-            
-            if speech_detected:
-                base_score += 10
-                energy = audio.get('energy_level', 0)
-                if energy > 30:
-                    base_score += 10
-            
-            # Petit bonus si visage centré
-            if face_detected:
-                engagement = video.get('engagement_score', 0)
-                if engagement > 70:
-                    base_score += 5
-        
-        return max(5, min(100, base_score))
-    
     def _detect_significant_head_movement(self) -> bool:
-        """Détecter des mouvements significatifs sur 3 secondes - VERSION TRÈS STRICTE"""
-        if len(self.head_movement_history) < 5:  # Exiger plus d'historique
-            return False
-        
-        # Analyser les changements de direction avec seuils TRÈS élevés
-        significant_yaw_changes = 0
-        significant_pitch_changes = 0
-        micro_movements = 0
-        total_movement = 0
-        
-        for i in range(1, len(self.head_movement_history)):
-            current = self.head_movement_history[i]
-            previous = self.head_movement_history[i-1]
-            
-            # Changement yaw (gauche-droite) - SEUILS TRÈS STRICTS
-            yaw_diff = abs(current['yaw'] - previous['yaw'])
-            if yaw_diff > 20:  # Mouvement vraiment significatif > 20°
-                significant_yaw_changes += 1
-                total_movement += yaw_diff
-            elif 0.5 <= yaw_diff <= 5:  # Micro-mouvements (redressements/tremblements)
-                micro_movements += 1
-            
-            # Changement pitch (haut-bas) - SEUILS TRÈS STRICTS  
-            pitch_diff = abs(current['pitch'] - previous['pitch'])
-            if pitch_diff > 20:  # Mouvement vraiment significatif > 20°
-                significant_pitch_changes += 1
-                total_movement += pitch_diff
-            elif 0.5 <= pitch_diff <= 5:  # Micro-mouvements
-                micro_movements += 1
-        
-        # CRITÈRES TRÈS STRICTS:
-        # 1. Rejeter immédiatement si trop de micro-mouvements (instabilité)
-        if micro_movements > 5:  # Plus tolérant aux micro-mouvements
-            return False
-        
-        # 2. Exiger un mouvement total minimum 
-        if total_movement < 40:  # Au moins 40° de mouvement total
+        """Détection basée sur la variance des positions sur ~60 frames (3 secondes)"""
+        # Il faut un minimum de données (au moins 1 seconde pour commencer)
+        if len(self.head_movement_history) < 20:
             return False
             
-        # 3. Exiger plusieurs mouvements significatifs
-        significant_movement = (
-            significant_yaw_changes >= 3 or  # 3 mouvements dans une direction
-            significant_pitch_changes >= 3 or 
-            (significant_yaw_changes >= 2 and significant_pitch_changes >= 2)  # 2+2
-        )
+        # Analyser les 60 dernières frames (fenêtre glissante)
+        # Avec le framerate de 20fps, cela représente 3 secondes d'historique
+        # Cela permet de lisser les mouvements lents et capturer le rythme sur la durée
+        recent_history = self.head_movement_history[-60:]
         
-        return significant_movement
-    
+        # Extraction des séries de données
+        yaws = [m['yaw'] for m in recent_history]
+        pitches = [m['pitch'] for m in recent_history]
+        
+        def calculate_std_dev(data):
+            """Calcul écart-type manuel"""
+            if len(data) < 2: return 0.0
+            avg = sum(data) / len(data)
+            variance = sum([(x - avg) ** 2 for x in data]) / len(data)
+            return variance ** 0.5
+            
+        # Calculer la dispersion autour de la moyenne
+        yaw_std = calculate_std_dev(yaws)
+        pitch_std = calculate_std_dev(pitches)
+        
+        # SEUILS (Baromètre):
+        # L'utilisateur mentionne des variations de "1.2 à 1.3".
+        # Un écart-type de 0.4 - 0.5 signifie une variation moyenne d'environ 0.5 degré autour du centre.
+        # Cela capture les mouvements subtils mais ignore le "bruit" statique (tracking jitter).
+        threshold = 0.8 # Seuil augmenté sur demande (était 0.5) pour éviter les faux positifs
+        
+        is_moving_yaw = yaw_std > threshold      # Variation latérale (Non/Rythme)
+        is_moving_pitch = pitch_std > threshold  # Variation verticale (Oui/Rythme)
+        
+        return is_moving_yaw or is_moving_pitch
+        
+        return is_moving_yaw or is_moving_pitch
+
     def _get_movement_quality(self) -> float:
-        """Calculer la qualité des mouvements (0-1) - VERSION TRÈS STRICTE"""
+        """Calculer l'intensité du mouvement (0.0 à 1.0)"""
         if len(self.head_movement_history) < 3:
             return 0.0
-        
-        significant_movement = 0
-        meaningful_changes = 0
-        micro_movements = 0
-        
-        for i in range(1, len(self.head_movement_history)):
-            current = self.head_movement_history[i]
-            previous = self.head_movement_history[i-1]
             
-            yaw_diff = abs(current['yaw'] - previous['yaw'])
-            pitch_diff = abs(current['pitch'] - previous['pitch'])
-            
-            total_diff = yaw_diff + pitch_diff
-            
-            # Seuls les mouvements > 15° comptent vraiment
-            if total_diff > 15:  # Seuil encore plus élevé
-                significant_movement += total_diff
-                meaningful_changes += 1
-            # Les micro-mouvements (0.5-5°) pénalisent FORTEMENT la qualité
-            elif 0.5 <= total_diff <= 5:
-                micro_movements += 1
+        recent_history = self.head_movement_history[-15:] # 1.5 secondes
+        total_delta = 0
         
-        # Pénalité FORTE pour les micro-mouvements
-        penalty = micro_movements * 0.15  # Pénalité plus forte
-        
-        # Si trop de micro-mouvements, qualité = 0
-        if micro_movements > 4:
-            return 0.0
+        for i in range(1, len(recent_history)):
+            curr = recent_history[i]
+            prev = recent_history[i-1]
+            total_delta += abs(curr['yaw'] - prev['yaw']) + abs(curr['pitch'] - prev['pitch'])
             
-        # Qualité basée sur les mouvements significatifs uniquement
-        quality = min(1.0, (significant_movement / 200) + (meaningful_changes / 6))
-        quality = max(0.0, quality - penalty)
+        # Normalisation : 30 degrés cumulés sur 1.5s = intensité 1.0
+        intensity = min(1.0, total_delta / 30.0)
+        return intensity
+
+    def _compute_attention(self, video: Dict, audio: Dict) -> int:
+        """Calcul attention unifié"""
         
-        return quality
+        face_detected = video.get('face_detected', False)
+        
+        # 1. Pas de visage = Attention minimale
+        if not face_detected:
+            return 5
+            
+        # 2. Score de base provenant de l'analyseur vidéo (50 à 100)
+        video_score = video.get('engagement_score', 50)
+        
+        attention_score = video_score
+        
+        # 3. Bonus Mouvement (Le mouvement est signe de vie/engagement ici)
+        is_moving = self._detect_significant_head_movement()
+        if is_moving:
+            quality = self._get_movement_quality()
+            # Si ça bouge, on valide l'engagement actif
+            # On remonte les scores faibles vers le haut
+            if attention_score < 70:
+                attention_score += 15
+            else:
+                attention_score += 5
+        
+        # 4. Bonus Audio (Parler ou chanter = engagement)
+        if audio.get('speech_detected', False):
+            attention_score += 10
+            
+        return min(100, attention_score)
     
     def _determine_emotion(self, video: Dict, audio: Dict) -> str:
         """Émotion dominante avec priorité vidéo (DeepFace)"""
