@@ -225,196 +225,211 @@ async function uploadFiles(event) {
             body: formData
         });
 
-        const data = await response.json();
-        showNotification(`${data.uploaded.length} fichier(s) ajouté(s)`);
-        clientStateVersion = data.state_version;
-        await updateDisplay();
+        if (!response.ok) throw new Error('Erreur réseau');
 
-        // Mettre à jour la playlist si ouverte
+        const data = await response.json();
+        console.log('Fichiers téléchargés:', data);
+        showNotification(`${data.total} fichier(s) téléchargé(s)`);
+
+        // Mettre à jour la playlist si elle est ouverte
         if (playlistOpen) {
             updatePlaylistMenu();
         }
     } catch (error) {
-        console.error('Erreur upload:', error);
-        showNotification('Erreur lors de l\'ajout des fichiers');
-    }
-
-    event.target.value = '';
-}
-
-async function clearPlaylist() {
-    if (confirm('Voulez-vous effacer toute la playlist ?')) {
-        try {
-            const response = await fetch('/api/clear', {
-                method: 'POST'
-            });
-            const data = await response.json();
-
-            audioElement.pause();
-            audioElement.src = '';
-            currentSong = null;
-            isPlaying = false;
-            clientStateVersion = data.state_version;
-
-            document.getElementById('progressSlider').value = 0;
-            document.getElementById('currentTime').textContent = '0:00';
-            document.getElementById('totalTime').textContent = '0:00';
-
-            await updateDisplay();
-
-            // Mettre à jour la playlist si ouverte
-            if (playlistOpen) {
-                updatePlaylistMenu();
-            }
-
-            showNotification('Playlist effacée');
-        } catch (error) {
-            console.error('Erreur clear:', error);
-            showNotification('Erreur lors de l\'effacement');
-        }
+        console.error('Erreur lors du téléchargement:', error);
+        showNotification('Erreur lors du téléchargement des fichiers');
     }
 }
+
+// ==========================================
+// FONCTIONS DE CONTRÔLE MANQUANTES (AJOUTÉES)
+// ==========================================
 
 async function togglePlayPause() {
     try {
-        const response = await fetch('/api/play-pause', {
-            method: 'POST'
-        });
+        const response = await fetch('/api/play-pause', { method: 'POST' });
         const data = await response.json();
-
-        clientStateVersion = data.state_version;
         isPlaying = data.is_playing;
         window.isPlaying = isPlaying;
-
-        // Tracker play/pause
-        if (window.trackAttentionInteraction) {
-            window.trackAttentionInteraction(isPlaying ? 'play' : 'pause');
-        }
-
-        if (isPlaying && audioElement.src) {
-            try {
-                await audioElement.play();
-                console.log('Play activé');
-            } catch (error) {
-                console.error('Erreur de lecture:', error);
-                showNotification('Impossible de lire le fichier');
-            }
-        } else {
-            audioElement.pause();
-            console.log('Pause activée');
-        }
-
         updatePlayPauseIcon();
+        if (isPlaying) audioElement.play();
+        else audioElement.pause();
     } catch (error) {
-        console.error('Erreur toggle:', error);
-        showNotification('Erreur de connexion');
+        console.error('Erreur play/pause:', error);
     }
 }
 
 async function nextSong() {
-    // Tracker le skip
-    if (window.trackAttentionInteraction) {
-        window.trackAttentionInteraction('skip');
-    }
-
     try {
-        const response = await fetch('/api/next', {
-            method: 'POST'
-        });
-
-        if (!response.ok) {
-            console.log('Pas de chanson suivante');
-            return;
-        }
-
-        const data = await response.json();
-        clientStateVersion = data.state_version;
-
-        if (data.song && data.song.filename) {
-            console.log(`Passage à la chanson suivante: ${data.song.filename}`);
-            currentSong = data.song.filename;
-
-            audioElement.pause();
-            audioElement.currentTime = 0;
-            audioElement.src = `/music/${currentSong}`;
-            document.getElementById('progressSlider').value = 0;
-
-            isPlaying = data.is_playing;
-
-            if (isPlaying) {
-                try {
-                    await audioElement.load();
-                    await audioElement.play();
-                    console.log('Lecture de la chanson suivante');
-                } catch (error) {
-                    console.error('Erreur de lecture:', error);
-                }
-            }
-
-            await updateDisplay();
-
-            if (playlistOpen) {
-                updatePlaylistMenu();
-            }
-        }
-    } catch (error) {
-        console.error('Erreur next:', error);
-        showNotification('Erreur lors du passage à la chanson suivante');
-    }
+        await fetch('/api/next', { method: 'POST' });
+        await updateDisplay();
+    } catch (e) { console.error(e); }
 }
 
 async function previousSong() {
-    // Tracker la navigation
-    if (window.trackAttentionInteraction) {
-        window.trackAttentionInteraction('seek');
+    try {
+        await fetch('/api/prev', { method: 'POST' });
+        await updateDisplay();
+    } catch (e) { console.error(e); }
+}
+
+async function clearPlaylist() {
+    if (!confirm('Voulez-vous vraiment tout effacer ?')) return;
+    try {
+        await fetch('/api/clear', { method: 'POST' });
+        await updateDisplay();
+    } catch (e) { console.error(e); }
+}
+
+// ==========================================
+// LOGIQUE DU SIDEBAR ET DES ANALYSES
+// ==========================================
+
+let analysisInterval = null;
+let webcamStream = null;
+let sidebarInitialized = false;
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (!sidebarInitialized) {
+        initSidebarLogic();
+        sidebarInitialized = true;
+    }
+});
+
+function initSidebarLogic() {
+    // 1. Gestion de la Caméra
+    const cameraToggle = document.getElementById('cameraToggle');
+    const videoElement = document.getElementById('webcamFeed');
+    const placeholder = document.getElementById('cameraPlaceholder');
+
+    if (!cameraToggle || !videoElement || !placeholder) {
+        console.warn('⚠️ Éléments sidebar non trouvés');
+        return;
     }
 
-    try {
-        const response = await fetch('/api/previous', {
-            method: 'POST'
+    cameraToggle.addEventListener('change', async (e) => {
+        if (e.target.checked) {
+            try {
+                webcamStream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: 640, height: 360, frameRate: 15 }
+                });
+                videoElement.srcObject = webcamStream;
+                videoElement.classList.add('active');
+                placeholder.style.display = 'none';
+                console.log('📷 Caméra activée');
+            } catch (err) {
+                console.error("Erreur accès caméra:", err);
+                e.target.checked = false;
+                alert("Impossible d'accéder à la caméra. Vérifiez les permissions.");
+            }
+        } else {
+            if (webcamStream) {
+                webcamStream.getTracks().forEach(track => track.stop());
+                webcamStream = null;
+            }
+            videoElement.srcObject = null;
+            videoElement.classList.remove('active');
+            placeholder.style.display = 'flex';
+            console.log('📷 Caméra désactivée');
+        }
+    });
+
+    // 2. Gestion du Collapse Analysis
+    const toggleBtn = document.getElementById('analysisToggleBtn');
+    const content = document.getElementById('analysisContent');
+    const chevron = document.getElementById('analysisChevron');
+
+    if (toggleBtn && content && chevron) {
+        toggleBtn.addEventListener('click', () => {
+            content.classList.toggle('collapsed');
+            chevron.classList.toggle('rotated');
         });
+    }
 
-        if (!response.ok) {
-            console.log('Pas de chanson précédente');
-            return;
+    // 3. Démarrer la simulation des données
+    startAnalysisSimulation();
+    console.log('✅ Sidebar initialisé');
+}
+
+function startAnalysisSimulation() {
+    if (analysisInterval) clearInterval(analysisInterval);
+
+    analysisInterval = setInterval(() => {
+        // Ne mettre à jour que si la musique joue
+        if (!window.isPlaying) return;
+
+        updateMetricsUI({
+            headX: (Math.random() * 20 - 10).toFixed(1),
+            headY: (Math.random() * 20 - 10).toFixed(1),
+            energy: Math.floor(Math.random() * 100),
+            voiceEmotion: getRandomEmotion(['Joie', 'Calme', 'Neutre', 'Énergie']),
+            faceEmotion: getRandomEmotion(['Heureux', 'Surpris', 'Neutre', 'Concentré']),
+            score: Math.floor(Math.random() * 30) + 70
+        });
+    }, 1000);
+}
+
+function getRandomEmotion(list) {
+    return list[Math.floor(Math.random() * list.length)];
+}
+
+function updateMetricsUI(data) {
+    const headX = document.getElementById('headX');
+    const headY = document.getElementById('headY');
+    const energyVal = document.getElementById('energyVal');
+    const energyBar = document.getElementById('energyBar');
+    const voiceEmotion = document.getElementById('voiceEmotion');
+    const faceEmotion = document.getElementById('faceEmotion');
+    const finalScore = document.getElementById('finalScore');
+
+    if (headX) headX.textContent = data.headX;
+    if (headY) headY.textContent = data.headY;
+    if (energyVal) energyVal.textContent = `${data.energy}%`;
+    if (energyBar) energyBar.style.width = `${data.energy}%`;
+    if (voiceEmotion) voiceEmotion.textContent = data.voiceEmotion;
+    if (faceEmotion) faceEmotion.textContent = data.faceEmotion;
+
+    if (finalScore) {
+        finalScore.textContent = data.score;
+        // Couleur dynamique du score
+        if (data.score > 80) {
+            finalScore.style.background = 'linear-gradient(45deg, #2ecc71, #27ae60)';
+        } else if (data.score > 50) {
+            finalScore.style.background = 'linear-gradient(45deg, #f1c40f, #f39c12)';
+        } else {
+            finalScore.style.background = 'linear-gradient(45deg, #e74c3c, #c0392b)';
         }
-
-        const data = await response.json();
-        clientStateVersion = data.state_version;
-
-        if (data.song && data.song.filename) {
-            console.log(`Passage à la chanson précédente: ${data.song.filename}`);
-            currentSong = data.song.filename;
-
-            audioElement.pause();
-            audioElement.currentTime = 0;
-            audioElement.src = `/music/${currentSong}`;
-            document.getElementById('progressSlider').value = 0;
-
-            isPlaying = data.is_playing;
-
-            if (isPlaying) {
-                try {
-                    await audioElement.load();
-                    await audioElement.play();
-                    console.log('Lecture de la chanson précédente');
-                } catch (error) {
-                    console.error('Erreur de lecture:', error);
-                }
-            }
-
-            await updateDisplay();
-
-            // Mettre à jour la playlist si ouverte
-            if (playlistOpen) {
-                updatePlaylistMenu();
-            }
-        }
-    } catch (error) {
-        console.error('Erreur previous:', error);
-        showNotification('Erreur lors du passage à la chanson précédente');
+        finalScore.style.webkitBackgroundClip = 'text';
+        finalScore.style.webkitTextFillColor = 'transparent';
+        finalScore.style.backgroundClip = 'text';
     }
 }
+
+// Fonction pour ajouter une chanson validée
+window.addValidatedSong = function (title, duration, score) {
+    const list = document.getElementById('validatedList');
+    if (!list) return;
+
+    // Supprimer l'exemple statique s'il existe
+    const example = list.querySelector('.validated-item');
+    if (example && example.querySelector('.v-title').textContent === 'Midnight City') {
+        example.remove();
+    }
+
+    const item = document.createElement('div');
+    item.className = 'validated-item';
+    item.innerHTML = `
+        <div class="v-info">
+            <span class="v-title">${title}</span>
+            <span class="v-duration">${duration}</span>
+        </div>
+        <div class="v-score ${score >= 80 ? 'high' : 'medium'}">${score}%</div>
+    `;
+    list.appendChild(item);
+
+    // Scroll vers le nouvel élément
+    list.scrollTop = list.scrollHeight;
+};
 
 // Slider de progression - TRACKER L'INTERACTION
 const progressSlider = document.getElementById('progressSlider');

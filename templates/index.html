@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,75 +13,259 @@
     <link rel="stylesheet" href="/static/analytics.css">
     <link rel="stylesheet" href="/static/attention-adapter.css">
 </head>
+
 <body class="theme-neutral">
-    <div class="player-container">
-        <div class="file-controls">
-            <button class="file-btn" id="addFilesBtn">
-                + Ajouter des fichiers
-            </button>
-            <button class="file-btn" id="clearBtn">
-                Effacer tout
-            </button>
-            <!-- Le sélecteur de playlist et thème seront injectés ici -->
-        </div>
+    <div class="app-layout">
+        <div class="player-container">
+            <div class="player-wrapper">
 
-        <input type="file" id="fileInput" multiple accept="audio/*">
+                <!-- CENTRE : Lecteur -->
+                <div class="player-center">
+                    <div class="file-controls" style="opacity: 0.9;">
+                        <button class="file-btn" id="addFilesBtn">
+                            + Ajouter
+                        </button>
+                        <button class="file-btn" id="clearBtn">
+                            Effacer
+                        </button>
 
-        <div class="song-info">
-            <div class="song-title" id="songTitle">Aucune musique</div>
-            <div class="song-artist" id="songArtist">Ajoutez des fichiers</div>
-        </div>
+                        <div class="theme-selector">
+                            <button class="theme-toggle-btn" id="themeToggleBtn" title="Changer de thème">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <circle cx="12" cy="12" r="5"></circle>
+                                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                                </svg>
+                            </button>
+                            <div class="theme-menu" id="themeMenu" style="display: none;">
+                                <div class="theme-menu-header">Ambiance</div>
+                                <div class="theme-grid">
+                                    <button class="theme-option" data-theme="neutral" title="Neutre"><span
+                                            class="theme-dot theme-neutral"></span><span
+                                            class="theme-name">Neutre</span></button>
+                                    <button class="theme-option" data-theme="energy" title="Énergie"><span
+                                            class="theme-dot theme-energy"></span><span
+                                            class="theme-name">Énergie</span></button>
+                                    <button class="theme-option" data-theme="calm" title="Calme"><span
+                                            class="theme-dot theme-calm"></span><span
+                                            class="theme-name">Calme</span></button>
+                                    <button class="theme-option" data-theme="focus" title="Focus"><span
+                                            class="theme-dot theme-focus"></span><span
+                                            class="theme-name">Focus</span></button>
+                                    <button class="theme-option" data-theme="sunset" title="Coucher de soleil"><span
+                                            class="theme-dot theme-sunset"></span><span class="theme-name">Coucher de
+                                            soleil</span></button>
+                                    <button class="theme-option" data-theme="midnight" title="Minuit"><span
+                                            class="theme-dot theme-midnight"></span><span
+                                            class="theme-name">Minuit</span></button>
+                                    <button class="theme-option" data-theme="sunsetDark" title="Sombre chaleureux"><span
+                                            class="theme-dot theme-sunset-dark"></span><span class="theme-name">Sombre
+                                            chaleureux</span></button>
+                                    <button class="theme-option" data-theme="aurora" title="Aurore"><span
+                                            class="theme-dot theme-aurora"></span><span
+                                            class="theme-name">Aurore</span></button>
+                                    <button class="theme-option" data-theme="lavender" title="Lavande"><span
+                                            class="theme-dot theme-lavender"></span><span
+                                            class="theme-name">Lavande</span></button>
+                                    <button class="theme-option" data-theme="ocean" title="Océan"><span
+                                            class="theme-dot theme-ocean"></span><span
+                                            class="theme-name">Océan</span></button>
+                                    <button class="theme-option" data-theme="fire" title="Feu"><span
+                                            class="theme-dot theme-fire"></span><span
+                                            class="theme-name">Feu</span></button>
+                                </div>
+                                <div class="theme-menu-footer">
+                                    <label class="auto-variation-toggle">
+                                        <input type="checkbox" id="autoVariationToggle" checked="">
+                                        <span>Variations automatiques</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-        <div class="bottom-section">
-            <div class="progress-section">
-                <input type="range" id="progressSlider" min="0" max="100" value="0" step="0.1">
-                <div class="time-display">
-                    <span id="currentTime">0:00</span>
-                    <span id="totalTime">0:00</span>
+                    <input type="file" id="fileInput" multiple accept="audio/*">
+
+                    <div class="song-info">
+                        <div class="song-title" id="songTitle">Aucune musique</div>
+                        <div class="song-artist" id="songArtist">Ajoutez des fichiers</div>
+                    </div>
+
+                    <div class="bottom-section">
+                        <div class="progress-section">
+                            <input type="range" id="progressSlider" min="0" max="100" value="0" step="0.1">
+                            <div class="time-display">
+                                <span id="currentTime">0:00</span>
+                                <span id="totalTime">0:00</span>
+                            </div>
+                        </div>
+
+                        <div class="controls">
+                            <button class="btn btn-small" id="prevBtn">
+                                <svg width="24" height="24" viewBox="0 0 24 24">
+                                    <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
+                                </svg>
+                            </button>
+                            <button class="btn btn-large" id="playPauseBtn">
+                                <svg id="playIcon" width="32" height="32" viewBox="0 0 24 24">
+                                    <path d="M8 5v14l11-7z" />
+                                </svg>
+                                <svg id="pauseIcon" width="32" height="32" viewBox="0 0 24 24" style="display: none;">
+                                    <path d="M6 4h4v16H6zm8 0h4v16h-4z" />
+                                </svg>
+                            </button>
+                            <button class="btn btn-small" id="nextBtn">
+                                <svg width="24" height="24" viewBox="0 0 24 24">
+                                    <path d="M16 18h2V6h-2zm-11-7l8.5-6v12z" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div class="slider-container">
+                            <svg class="volume-icon" viewBox="0 0 24 24">
+                                <path
+                                    d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z" />
+                            </svg>
+                            <input type="range" id="volumeSlider" min="0" max="100" value="100">
+                        </div>
+
+                        <div class="progress-indicator" id="progress">0 / 0</div>
+                    </div>
+
+                </div>
+
+                <!-- DROITE/BAS : Widgets -->
+                <div class="player-widgets">
+                    <!-- Section 1: Caméra -->
+                    <div class="widget-card camera-section">
+                        <div class="section-header">
+                            <div class="header-title">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M23 7l-7 5 7 5V7z" />
+                                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+                                </svg>
+                                <span>Caméra</span>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="cameraToggle">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        <div class="camera-feed-container">
+                            <div class="camera-placeholder" id="cameraPlaceholder">
+                                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1">
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                    <path d="M21 21l-6-6m2-2l4-4V7l-7 5 7 5v-2c0-1.1.9-2 2-2z"></path>
+                                    <path d="M1 5v14c0 1.1.9 2 2 2h14l-2-2H3V7l-2-2z"></path>
+                                </svg>
+                                <span>Inactif</span>
+                            </div>
+                            <video id="webcamFeed" autoplay muted playsinline></video>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Analyses -->
+                    <div class="widget-card analysis-section">
+                        <div class="section-header clickable" id="analysisToggleBtn">
+                            <div class="header-title">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M2 12h20M2 12l4-4m-4 4l4 4M22 12l-4-4m4 4l-4 4" />
+                                </svg>
+                                <span>Analyses</span>
+                            </div>
+                            <svg class="chevron-icon" id="analysisChevron" width="18" height="18" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+
+                        <div class="analysis-content" id="analysisContent">
+                            <div class="metrics-grid">
+                                <!-- Position Tête -->
+                                <div class="metric-card card-head">
+                                    <span class="metric-label">Tête</span>
+                                    <div class="metric-dual-value">
+                                        <div><span id="headX">0</span></div>
+                                        <div><span id="headY">0</span></div>
+                                    </div>
+                                </div>
+
+                                <!-- Émotion Vocale -->
+                                <div class="metric-card card-voice">
+                                    <span class="metric-label">Voix</span>
+                                    <span class="metric-value-text" id="voiceEmotion">--</span>
+                                </div>
+
+                                <!-- Émotion Faciale -->
+                                <div class="metric-card card-face">
+                                    <span class="metric-label">Visage</span>
+                                    <span class="metric-value-text" id="faceEmotion">--</span>
+                                </div>
+
+                                <!-- Énergie Audio -->
+                                <div class="metric-card card-audio span-2">
+                                    <div class="metric-header">
+                                        <span class="metric-label">Énergie</span>
+                                        <span class="metric-value-sm" id="energyVal">0%</span>
+                                    </div>
+                                    <div class="metric-progress-bg">
+                                        <div class="metric-progress-fill" id="energyBar" style="width: 0%"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Score Final -->
+                                <div class="metric-card card-score span-2">
+                                    <span class="metric-label">Score</span>
+                                    <span class="metric-score-large" id="finalScore">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Chansons Validées -->
+                    <div class="widget-card validated-section">
+                        <div class="section-header">
+                            <div class="header-title">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                                    <polyline points="22 4 12 14.01 9 11.01" />
+                                </svg>
+                                <span>Validées</span>
+                            </div>
+                        </div>
+                        <div class="validated-list" id="validatedList">
+                            <!-- Exemple statique pour le design initial -->
+                            <div class="validated-item">
+                                <div class="v-info">
+                                    <span class="v-title">Midnight City</span>
+                                    <span class="v-duration">4:03</span>
+                                </div>
+                                <div class="v-score high">98%</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <div class="controls">
-                <button class="btn btn-small" id="prevBtn">
-                    <svg width="24" height="24" viewBox="0 0 24 24">
-                        <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
-                    </svg>
-                </button>
-
-                <button class="btn btn-large" id="playPauseBtn">
-                    <svg id="playIcon" width="32" height="32" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z"/>
-                    </svg>
-                    <svg id="pauseIcon" width="32" height="32" viewBox="0 0 24 24" style="display: none;">
-                        <path d="M6 4h4v16H6zm8 0h4v16h-4z"/>
-                    </svg>
-                </button>
-
-                <button class="btn btn-small" id="nextBtn">
-                    <svg width="24" height="24" viewBox="0 0 24 24">
-                        <path d="M16 18h2V6h-2zm-11-7l8.5-6v12z"/>
-                    </svg>
-                </button>
-            </div>
-
-            <div class="slider-container">
-                <svg class="volume-icon" viewBox="0 0 24 24">
-                    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
-                </svg>
-                <input type="range" id="volumeSlider" min="0" max="100" value="100">
-            </div>
-
-            <div class="progress-indicator" id="progress">0 / 0</div>
         </div>
     </div>
 
     <div class="notification" id="notification"></div>
-
-    <!-- Scripts : thème → script principal → widgets → analytics → attention -->
-    <script src="/static/theme-engine.js"></script>
     <script src="/static/script.js"></script>
+    <script src="/static/theme-engine.js"></script>
     <script src="/static/widgets.js"></script>
     <script src="/static/analytics.js"></script>
     <script src="/static/attention-adapter.js"></script>
 </body>
+
 </html>

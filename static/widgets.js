@@ -17,6 +17,15 @@ class WidgetManager {
         this.initRippleEffect();
         this.initTooltips();
 
+        // Bind static Info button
+        const staticInfoBtn = document.getElementById('quickInfo');
+        if (staticInfoBtn) {
+            staticInfoBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.toggleInfoPanel();
+            });
+        }
+
         // Charger l'état initial des modes
         await this.loadModes();
     }
@@ -33,49 +42,26 @@ class WidgetManager {
         }
     }
 
+
+
+
     createInfoPanel() {
         const panel = document.createElement('div');
-        panel.className = 'info-panel';
         panel.id = 'infoPanel';
+        panel.className = 'info-panel';
         panel.innerHTML = `
-            <div class="info-panel-header">Statistiques</div>
-            <div class="info-stat">
-                <span class="info-stat-label">Chansons</span>
-                <span class="info-stat-value" id="statTotalSongs">0</span>
-            </div>
-            <div class="info-stat">
-                <span class="info-stat-label">Durée totale</span>
-                <span class="info-stat-value" id="statTotalDuration">0:00</span>
-            </div>
-            <div class="info-stat">
-                <span class="info-stat-label">En cours</span>
-                <span class="info-stat-value">
-                    <span class="status-badge" id="statStatus">
-                        <span class="status-dot"></span>
-                        <span>Arrêté</span>
-                    </span>
-                </span>
-            </div>
-            <div class="info-stat">
-                <span class="info-stat-label">Volume</span>
-                <span class="info-stat-value" id="statVolume">100%</span>
-            </div>
-            <div class="info-stat">
-                <span class="info-stat-label">Attention</span>
-                <span class="info-stat-value">
-                    <span class="attention-score" id="statAttentionScore">100</span>
-                    <span class="attention-score-label">/100</span>
-                </span>
+            <div class="info-content">
+                <h3>Infos du lecteur</h3>
+                <div class="stats-grid">
+                    <div class="stat-item"><span class="stat-label">Titres</span><span id="statTotalSongs">0</span></div>
+                    <div class="stat-item"><span class="stat-label">Durée</span><span id="statTotalDuration">0:00</span></div>
+                    <div class="stat-item"><span class="stat-label">État</span><span id="statStatus">Arrêté</span></div>
+                    <div class="stat-item"><span class="stat-label">Volume</span><span id="statVolume">100%</span></div>
+                    <div class="stat-item"><span class="stat-label">Attention</span><span id="statAttentionScore">--</span></div>
+                </div>
             </div>
         `;
-
         document.body.appendChild(panel);
-        console.log('Panneau d\'infos créé');
-
-        // Afficher après 1 seconde
-        setTimeout(() => {
-            panel.classList.add('show');
-        }, 1000);
     }
 
     createQuickControls() {
@@ -97,20 +83,13 @@ class WidgetManager {
                     <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                 </svg>
             </button>
-            <button class="quick-control-btn" id="quickInfo" data-tooltip="Infos">
-                <svg viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
-                </svg>
-            </button>
         `;
 
         document.body.appendChild(controls);
         console.log('Contrôles rapides créés');
 
         // Event listeners
-        document.getElementById('quickInfo')?.addEventListener('click', () => {
-            this.toggleInfoPanel();
-        });
+        // Info button is now static in player, not here
 
         document.getElementById('quickShuffle')?.addEventListener('click', () => {
             this.toggleShuffle();
