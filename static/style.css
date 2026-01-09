@@ -108,9 +108,10 @@ body {
 }
 
 /* --- CAMERA --- */
-.camera-feed-container {
+.camera-container {
     width: 100%;
     aspect-ratio: 16/9;
+    min-height: 200px;
     background: #000;
     border-radius: 12px;
     overflow: hidden;
@@ -729,7 +730,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
 }
 
 /* --- CAMERA --- */
-.camera-feed-container {
+.camera-container {
     width: 100%;
     aspect-ratio: 16/9;
     background: #000;

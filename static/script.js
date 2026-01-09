@@ -287,13 +287,111 @@ async function clearPlaylist() {
 
 let analysisInterval = null;
 let webcamStream = null;
-let sidebarInitialized = false;
+
+// Initialiser Socket.IO pour recevoir les résultats d'analyse
+const socket = io();
+
+socket.on('connect', () => {
+    console.log('✅ Connecté au serveur WebSocket');
+});
+
+// Écouter les résultats d'analyse vidéo pour mettre à jour l'UI
+socket.on('video_result', (data) => {
+    if (data && data.result) {
+        drawTrackingOverlay(data.result);
+    }
+});
+
+socket.on('force_refresh', (data) => {
+    if (data.reason === 'low_attention') {
+        showNotification(data.message);
+        // Refresh UI state if needed
+        setTimeout(updateDisplay, 500);
+    }
+});
+
+// --- FONCTIONS DE DESSIN DU TRACKER ---
+function drawTrackingOverlay(result) {
+    const canvas = document.getElementById('trackingOverlay');
+    const video = document.getElementById('webcamFeed');
+
+    if (!canvas || !video || !result) return;
+
+    // Aligner la taille du canvas sur la vidéo
+    if (canvas.width !== video.clientWidth || canvas.height !== video.clientHeight) {
+        canvas.width = video.clientWidth;
+        canvas.height = video.clientHeight;
+    }
+
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width;
+    const h = canvas.height;
+
+    // Nettoyer
+    ctx.clearRect(0, 0, w, h);
+
+    if (result.face_detected) {
+        const score = result.engagement_score;
+        const color = score > 70 ? '#00E676' : (score > 30 ? '#FFEB3B' : '#FF3D00');
+
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 3;
+
+        // Simuler une boîte autour du visage (centrée, car on n'envoie pas les coords exactes pour l'instant)
+        // On utilise le "head_pose" pour décaler légèrement la boîte et donner l'impression de suivi
+        const yaw = result.head_pose.yaw;
+        const pitch = result.head_pose.pitch;
+
+        const centerX = (w / 2) + (yaw * 2); // Décalage basé sur la rotation
+        const centerY = (h / 2) + (pitch * 2);
+        const boxSize = h * 0.5;
+
+        // 1. Dessiner le cadre visage (style HUD)
+        ctx.strokeRect(centerX - boxSize / 2, centerY - boxSize / 2, boxSize, boxSize);
+
+        // 2. Dessiner la direction du regard (Flèche)
+        const endX = centerX + (yaw * 3);
+        const endY = centerY + (pitch * 3);
+
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(endX, endY);
+        ctx.strokeStyle = 'cyan';
+        ctx.stroke();
+
+        // 3. Afficher le score
+        ctx.fillStyle = color;
+        ctx.font = 'bold 16px monospace';
+        ctx.fillText(`ENGAGEMENT: ${score}%`, centerX - boxSize / 2, centerY - boxSize / 2 - 10);
+
+        // 4. Afficher l'émotion
+        if (result.emotion_hint) {
+            ctx.fillStyle = 'white';
+            ctx.fillText(`EMOTION: ${result.emotion_hint.toUpperCase()}`, centerX - boxSize / 2, centerY + boxSize / 2 + 20);
+        }
+    }
+}
+
+// Fonction pour envoyer les frames au serveur (à appeler quand la caméra est active)
+function sendVideoFrame() {
+    const video = document.getElementById('webcamFeed');
+    if (!video || !webcamStream || video.paused || video.ended) return;
+
+    // Créer un canvas temporaire pour capturer la frame
+    const canvas = document.createElement('canvas');
+    canvas.width = 300; // Résolution réduite pour performance
+    canvas.height = 200;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // Envoyer en base64
+    const dataURL = canvas.toDataURL('image/jpeg', 0.6);
+    socket.emit('video_frame', { frame: dataURL });
+}
 
 document.addEventListener('DOMContentLoaded', () => {
-    if (!sidebarInitialized) {
-        initSidebarLogic();
-        sidebarInitialized = true;
-    }
+    initialLoad();
+    initSidebarLogic();
 });
 
 function initSidebarLogic() {
@@ -301,6 +399,7 @@ function initSidebarLogic() {
     const cameraToggle = document.getElementById('cameraToggle');
     const videoElement = document.getElementById('webcamFeed');
     const placeholder = document.getElementById('cameraPlaceholder');
+    let frameInterval = null;
 
     if (!cameraToggle || !videoElement || !placeholder) {
         console.warn('⚠️ Éléments sidebar non trouvés');
@@ -310,27 +409,75 @@ function initSidebarLogic() {
     cameraToggle.addEventListener('change', async (e) => {
         if (e.target.checked) {
             try {
+                // Feedback visuel
+                placeholder.innerHTML = '<span>⏳ Activation...</span>';
+
                 webcamStream = await navigator.mediaDevices.getUserMedia({
                     video: { width: 640, height: 360, frameRate: 15 }
                 });
+
                 videoElement.srcObject = webcamStream;
                 videoElement.classList.add('active');
                 placeholder.style.display = 'none';
+
+                // FORCER LA LECTURE EXPLICITEMENT
+                try {
+                    await videoElement.play();
+                } catch (playErr) {
+                    console.error("Erreur play() vidéo:", playErr);
+                    showNotification("Erreur de lecture vidéo (autoplay bloqué ?)");
+                }
+
                 console.log('📷 Caméra activée');
+                showNotification('Caméra activée');
+
+                // Démarrer l'envoi des frames vers le serveur Python
+                if (frameInterval) clearInterval(frameInterval);
+                frameInterval = setInterval(sendVideoFrame, 150); // ~10 FPS max pour le backend
+
             } catch (err) {
                 console.error("Erreur accès caméra:", err);
                 e.target.checked = false;
-                alert("Impossible d'accéder à la caméra. Vérifiez les permissions.");
+                placeholder.style.display = 'flex';
+                placeholder.innerHTML = `
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M21 21l-6-6m2-2l4-4V7l-7 5 7 5v-2c0-1.1.9-2 2-2z"></path>
+                        <path d="M1 5v14c0 1.1.9 2 2 2h14l-2-2H3V7l-2-2z"></path>
+                    </svg>
+                    <span>Erreur d'accès</span>
+                `;
+                showNotification("Impossible d'accéder à la caméra");
+                // alert("Impossible d'accéder à la caméra. Vérifiez les permissions.");
             }
         } else {
+            // Arrêter la capture
+            if (frameInterval) clearInterval(frameInterval);
+            frameInterval = null;
+
             if (webcamStream) {
                 webcamStream.getTracks().forEach(track => track.stop());
                 webcamStream = null;
             }
+            videoElement.pause();
             videoElement.srcObject = null;
             videoElement.classList.remove('active');
             placeholder.style.display = 'flex';
+            placeholder.innerHTML = `
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M21 21l-6-6m2-2l4-4V7l-7 5 7 5v-2c0-1.1.9-2 2-2z"></path>
+                    <path d="M1 5v14c0 1.1.9 2 2 2h14l-2-2H3V7l-2-2z"></path>
+                </svg>
+                <span>Inactif</span>
+            `;
+
+            // Nettoyer le tracking
+            const canvas = document.getElementById('trackingOverlay');
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
             console.log('📷 Caméra désactivée');
+            showNotification('Caméra désactivée');
         }
     });
 

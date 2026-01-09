@@ -25,6 +25,7 @@ print("✅ MultimodalSystem importé")
 import base64
 import numpy as np
 import cv2
+import time
 
 app = Flask(__name__)
 
@@ -47,6 +48,11 @@ state_version = 0
 # Variables globales pour shuffle et repeat
 shuffle_mode = False
 repeat_mode = False
+
+# Variables pour l'auto-skip basé sur l'attention
+last_auto_skip_time = 0
+AUTO_SKIP_COOLDOWN = 10  # Ne pas skipper plus d'une fois toutes les 10 secondes
+MIN_ATTENTION_THRESHOLD = 65  # Seuil d'engagement en dessous duquel on change
 
 # NOUVEAU: Système d'attention
 attention_detector = AttentionDetector()
@@ -194,6 +200,31 @@ def allowed_file(filename):
 def increment_state_version():
     global state_version
     state_version += 1
+
+# --- HELPER POUR LE CHANGEMENT DE MUSIQUE ---
+def perform_next_song(trigger_source='manual'):
+    """Logique commune pour passer à la chanson suivante"""
+    global current_index, is_playing
+    
+    if not playlist:
+        return False
+
+    if shuffle_mode:
+        import random
+        new_index = random.randint(0, len(playlist) - 1)
+        if len(playlist) > 1 and new_index == current_index:
+            new_index = (new_index + 1) % len(playlist)
+        current_index = new_index
+    else:
+        current_index = (current_index + 1) % len(playlist)
+    
+    is_playing = True # On force la lecture
+    increment_state_version()
+    
+    # Tracker l'interaction
+    attention_detector.track_interaction(trigger_source)
+    
+    return True
 
 def extract_metadata(filepath, filename):
     """Extraire les métadonnées d'un fichier audio"""
@@ -526,22 +557,7 @@ def play_index():
 
 @app.route('/api/next', methods=['POST'])
 def next_song():
-    global current_index, is_playing
-    if playlist:
-        if shuffle_mode:
-            import random
-            new_index = random.randint(0, len(playlist) - 1)
-            if len(playlist) > 1 and new_index == current_index:
-                new_index = (new_index + 1) % len(playlist)
-            current_index = new_index
-        else:
-            current_index = (current_index + 1) % len(playlist)
-        
-        increment_state_version()
-        
-        # Tracker pour le système d'attention
-        attention_detector.track_interaction('skip')
-        
+    if perform_next_song('skip'):
         return jsonify({
             'song': playlist[current_index],
             'index': current_index,
@@ -688,28 +704,72 @@ def stop_multimodal():
 
 @socketio.on('video_frame')
 def handle_video_frame(data):
-    """Réception frame vidéo via WebSocket"""
+    """Réception frame vidéo via WebSocket et analyse d'attention"""
+    global last_auto_skip_time
+    
     try:
-        # Décoder base64 → numpy array
+        # 1. Décoder l'image (Base64 -> OpenCV)
+        if 'frame' not in data:
+            return
+
         img_data = base64.b64decode(data['frame'].split(',')[1])
         nparr = np.frombuffer(img_data, np.uint8)
         frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+        # 2. Utiliser l'analyseur du système multimodal
+        # On accède directement au video_analyzer de l'instance
+        video_result = multimodal_system.video_analyzer.analyze_frame(frame)
         
-        multimodal_system.add_video_frame(frame)
+        # 3. Récupérer le score d'engagement
+        engagement = video_result.get('engagement_score', 100)
+        face_detected = video_result.get('face_detected', False)
+        
+        # 4. LOGIQUE D'ADAPTATION MUSICALE (AUTO-SKIP)
+        current_time = time.time()
+        
+        # Si le score est très bas ET qu'un visage est détecté (pour ne pas skipper juste parce qu'on est parti)
+        # Ou si l'utilisateur semble s'ennuyer fermement
+        should_skip = False
+        
+        if face_detected and engagement < MIN_ATTENTION_THRESHOLD:
+            should_skip = True
+            print(f"⚠️ Attention basse détectée ({engagement}/100)")
+            
+        # Vérifier le cooldown pour ne pas skipper en boucle
+        if should_skip and (current_time - last_auto_skip_time > AUTO_SKIP_COOLDOWN):
+            print(f"🔄 CHANGEMENT AUTOMATIQUE DE MUSIQUE (Score: {engagement})")
+            last_auto_skip_time = current_time
+            
+            # Changer la musique
+            if perform_next_song('auto_skip_attention'):
+                # Informer le client (Frontend) qu'on a changé de musique
+                emit('force_refresh', {
+                     'reason': 'low_attention',
+                     'message': '🎵 Musique changée car votre attention a baissé !'
+                })
+
+        # 5. Renvoyer les résultats d'analyse au client pour affichage (optionnel, comme dans test_analyzers)
+        emit('video_result', {'result': video_result})
+
     except Exception as e:
-        print(f"❌ Erreur frame: {e}")
+        print(f"❌ Erreur processing video: {e}")
 
 @socketio.on('audio_chunk')
 def handle_audio_chunk(data):
     """Réception chunk audio via WebSocket"""
     try:
-        # Décoder base64 → numpy array
-        audio_bytes = base64.b64decode(data['audio'])
-        audio_array = np.frombuffer(audio_bytes, dtype=np.float32)
-        
-        multimodal_system.add_audio_chunk(audio_array)
+        # Traitement audio basique si nécessaire
+        if 'audio' in data:
+            audio_bytes = base64.b64decode(data['audio'])
+            audio_array = np.frombuffer(audio_bytes, dtype=np.float32)
+            
+            # Analyse
+            audio_result = multimodal_system.audio_analyzer.analyze_audio(audio_array)
+            
+            emit('audio_result', {'result': audio_result})
+            
     except Exception as e:
-        print(f"❌ Erreur audio: {e}")
+        print(f"❌ Erreur processing audio: {e}")
 
 # Modifier run final
 if __name__ == "__main__":

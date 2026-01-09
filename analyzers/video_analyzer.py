@@ -26,6 +26,10 @@ class VideoAnalyzer:
         self.immobility_frames = 0
         self.movement_history = []
         
+        # STABILISATION: Historique pour le lissage des valeurs
+        self.pose_smoothing = {'yaw': 0.0, 'pitch': 0.0, 'roll': 0.0}
+        self.smoothing_factor = 0.15  # 0.1 = très lent/stable, 0.9 = très réactif/nerveux
+        
         # Utiliser Haar Cascades (toujours disponible, rapide)
         print("⏳ Chargement Haar Cascades...")
         cascade_path = cv2.data.haarcascades
@@ -112,30 +116,41 @@ class VideoAnalyzer:
     
     def _estimate_head_pose(self, x: int, y: int, w: int, h: int, 
                            frame_width: int, frame_height: int) -> Dict:
-        """Estimer la pose de la tête basée sur la position du visage"""
+        """Estimer la pose de la tête avec lissage (Smoothing)"""
         
         # Centre du visage
         face_center_x = (x + w / 2) / frame_width
         face_center_y = (y + h / 2) / frame_height
         
-        # Yaw (gauche/droite) basé sur position horizontale
-        yaw = (face_center_x - 0.5) * 60  # -30° à +30°
+        # Yaw (gauche/droite) basé sur position horizontale relative
+        raw_yaw = (face_center_x - 0.5) * 60
         
-        # Pitch (haut/bas) basé sur position verticale
-        pitch = (face_center_y - 0.45) * 50  # -25° à +25°
+        # Pitch (haut/bas) basé sur position verticale relative
+        raw_pitch = (face_center_y - 0.45) * 50
         
-        # Roll (inclinaison) basé sur ratio largeur/hauteur
+        # Roll (inclinaison)
         aspect_ratio = w / h if h > 0 else 1.0
-        roll = 0
+        raw_roll = 0
         if aspect_ratio < 0.9:
-            roll = (0.9 - aspect_ratio) * 30
+            raw_roll = (0.9 - aspect_ratio) * 30
         elif aspect_ratio > 1.1:
-            roll = (aspect_ratio - 1.1) * -30
+            raw_roll = (aspect_ratio - 1.1) * -30
+            
+        # APPLIQUER LE LISSAGE (EMA)
+        # Valeur = (Alpha * Nouvelle) + ((1-Alpha) * Ancienne)
+        self.pose_smoothing['yaw'] = (self.smoothing_factor * raw_yaw) + \
+                                    ((1 - self.smoothing_factor) * self.pose_smoothing['yaw'])
+                                    
+        self.pose_smoothing['pitch'] = (self.smoothing_factor * raw_pitch) + \
+                                      ((1 - self.smoothing_factor) * self.pose_smoothing['pitch'])
+                                      
+        self.pose_smoothing['roll'] = (self.smoothing_factor * raw_roll) + \
+                                     ((1 - self.smoothing_factor) * self.pose_smoothing['roll'])
         
         return {
-            'yaw': round(yaw, 1),
-            'pitch': round(pitch, 1),
-            'roll': round(roll, 1)
+            'yaw': round(self.pose_smoothing['yaw'], 1),
+            'pitch': round(self.pose_smoothing['pitch'], 1),
+            'roll': round(self.pose_smoothing['roll'], 1)
         }
     
     def _analyze_expression(self, face_roi: np.ndarray, face_roi_gray: np.ndarray) -> Tuple[str, float]:
